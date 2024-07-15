@@ -1,0 +1,16 @@
+[package]
+name = "recognition"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { version = "0.7.4", features = ["macros"] }
+tokio = { version = "1.28.2", features = ["full"] }
+serde_json = "1.0.117"
+serde = {version="1.0.203", features = ["derive"]}
+utoipa = { features = ["axum_extras"], version = "4.2.3" }
+utoipa-swagger-ui = { features = ["axum"], version = "7.1.0" }
+diesel = { version = "2.2.0", features = ["postgres"] }
+dotenvy = "0.15"
