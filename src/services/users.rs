@@ -1,8 +1,5 @@
-use axum::http::StatusCode;
-use diesel::result::Error::NotFound;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 
-use crate::errors::Error;
 use crate::models::UsersQuery;
 use crate::{db_connection::connection, middleware::authorize::hash_password, models::*};
 

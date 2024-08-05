@@ -1,6 +1,6 @@
 use axum::{
     body::Body,
-    http::{header::FORWARDED, Response, StatusCode},
+    http::{Response, StatusCode},
     response::IntoResponse,
     Json,
 };

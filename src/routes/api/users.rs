@@ -7,7 +7,10 @@ use axum::{
 };
 
 use crate::{
-    errors::Error, middleware::admin_permissions, models::*, services::users::{create_user, delete_user_by_id, get_user_by_id, get_users_with_filters}
+    errors::Error,
+    middleware::admin_permissions,
+    models::*,
+    services::users::{create_user, delete_user_by_id, get_user_by_id, get_users_with_filters},
 };
 
 pub async fn router() -> Router {
@@ -80,7 +83,7 @@ pub async fn delete_user(Path(user_id): Path<i32>) {
 pub async fn get_user(Path(user_id): Path<i32>) -> Result<Json<User>, Error> {
     match get_user_by_id(user_id).await {
         Ok(user) => Ok(Json(user)),
-        Err(_) => Err(Error::new("User not found", StatusCode::NOT_FOUND))
+        Err(_) => Err(Error::new("User not found", StatusCode::NOT_FOUND)),
     }
 }
 
@@ -92,8 +95,6 @@ pub async fn get_user(Path(user_id): Path<i32>) -> Result<Json<User>, Error> {
         (status = 200, description = "Current user", body = User)
     )
 )]
-pub async fn get_current_user(
-    curr_user: Extension<User>,
-) -> Json<User> {
+pub async fn get_current_user(curr_user: Extension<User>) -> Json<User> {
     Json(curr_user.0.clone())
 }

@@ -1,6 +1,5 @@
 use axum::{
     extract::Path,
-    http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
@@ -24,9 +23,7 @@ pub async fn router() -> Router {
         (status = 201, description = "Create album", body = Album)
     )
 )]
-pub async fn post_album(
-    Json(new_album): Json<NewAlbum>,
-) -> Json<Album> {
+pub async fn post_album(Json(new_album): Json<NewAlbum>) -> Json<Album> {
     Json(create_album(new_album).await)
 }
 

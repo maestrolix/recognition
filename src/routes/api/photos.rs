@@ -41,10 +41,7 @@ pub async fn get_photo(
         (status = 201, description = "Add new photo", body = Photo)
     )
 )]
-pub async fn post_photo(
-    curr_user: Extension<User>,
-    photo_form: TypedMultipart<PhotoForm>,
-) {
+pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<PhotoForm>) {
     create_photo(photo_form.0, curr_user.id).await;
 }
 

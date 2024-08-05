@@ -1,6 +1,6 @@
 use axum::{middleware, routing::post, Router};
 
-use crate::middleware::{admin_permissions, authorize};
+use crate::middleware::authorize;
 
 pub mod albums;
 pub mod photos;
