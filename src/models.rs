@@ -4,7 +4,6 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-// use crate::controllers::photos::{Form, FormUtopia};
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, ToSchema, Clone, Debug)]
 #[diesel(table_name = crate::schema::users)]
@@ -18,6 +17,8 @@ pub struct User {
     pub email: String,
     /// Пароль пользователя
     pub password: String,
+    /// Возможности администратора
+    pub is_admin: bool
 }
 
 #[derive(Insertable, Serialize, Deserialize, ToSchema, Clone, Debug)]

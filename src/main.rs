@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use axum::Extension;
 use routes::craete_app;
 
 pub mod auth;
