@@ -3,13 +3,13 @@ use axum_typed_multipart::TypedMultipart;
 
 use crate::{
     models::{Photo, PhotoForm, User},
-    services::photos::{create_photo, get_photo_by_id, get_photos_by_filters},
+    services::photos::{create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters},
 };
 
 pub async fn router() -> Router {
     Router::new()
         .route("/", get(get_photos).post(post_photo))
-        .route("/:photo_id", get(get_photo))
+        .route("/:photo_id", get(get_photo).delete(delete_photo))
 }
 
 #[utoipa::path(
@@ -44,9 +44,8 @@ pub async fn get_photo(
 pub async fn post_photo(
     curr_user: Extension<User>,
     photo_form: TypedMultipart<PhotoForm>,
-) -> Result<StatusCode, StatusCode> {
+) {
     create_photo(photo_form.0, curr_user.id).await;
-    Ok(StatusCode::OK)
 }
 
 #[utoipa::path(
@@ -59,4 +58,20 @@ pub async fn post_photo(
 )]
 pub async fn get_photos(curr_user: Extension<User>) -> Json<Vec<Photo>> {
     Json(get_photos_by_filters(curr_user.id).await)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/photo/{photo_id}",
+    tag = "photos",
+    params(("photo_id" = i32, Path, description = "Todo database id")),
+    responses(
+        (status = 201, description = "Delete photo")
+    )
+)]
+pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>) -> StatusCode {
+    match delete_photo_by_id(photo_id, curr_user.0).await {
+        Ok(()) => StatusCode::OK,
+        Err(code) => code,
+    }
 }

@@ -16,7 +16,7 @@ pub async fn router() -> Router {
     post,
     path = "/api/signin",
     responses(
-        (status = 200, description = "Sign user", body = SignInData)
+        (status = 200, description = "Sign user")
     )
 )]
 pub async fn sign_in(

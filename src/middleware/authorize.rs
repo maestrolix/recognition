@@ -1,29 +1,22 @@
 use axum::{
     body::Body,
-    extract::{Json, Request},
+    extract::Request,
     http::{Response, StatusCode},
     middleware::Next,
-    response::IntoResponse,
 };
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tower_cookies::Cookies;
 
-use crate::services::users::get_user_by_email;
+use crate::{errors::Error, services::users::get_user_by_email};
 
 #[derive(Serialize, Deserialize)]
 pub struct Cliams {
     pub exp: usize,
     pub iat: usize,
     pub email: String,
-}
-
-pub struct AuthError {
-    message: String,
-    status_code: StatusCode,
 }
 
 pub fn verify_password(password: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
@@ -33,16 +26,6 @@ pub fn verify_password(password: &str, hash: &str) -> Result<bool, bcrypt::Bcryp
 pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     let hash = hash(password, DEFAULT_COST)?;
     Ok(hash)
-}
-
-impl IntoResponse for AuthError {
-    fn into_response(self) -> Response<Body> {
-        let body = Json(json!({
-            "error": self.message,
-        }));
-
-        (self.status_code, body).into_response()
-    }
 }
 
 pub fn encode_jwt(email: String) -> Result<String, StatusCode> {
@@ -80,24 +63,19 @@ pub async fn authorize(
     cookies: Cookies,
     mut req: Request,
     next: Next,
-) -> Result<Response<Body>, AuthError> {
+) -> Result<Response<Body>, Error> {
     let token = match cookies.get("token") {
         Some(token) => token.value().to_string(),
-        None => {
-            return Err(AuthError {
-                message: "Token not found".to_string(),
-                status_code: StatusCode::UNAUTHORIZED,
-            })
-        }
+        None => return Err(Error::new("Token not found", StatusCode::UNAUTHORIZED)),
     };
 
     let token_data = match decode_jwt(token) {
         Ok(data) => data,
         Err(_) => {
-            return Err(AuthError {
-                message: "Unable to decode token".to_string(),
-                status_code: StatusCode::UNAUTHORIZED,
-            })
+            return Err(Error::new(
+                "Unable to decode token",
+                StatusCode::UNAUTHORIZED,
+            ))
         }
     };
 

@@ -1,10 +1,11 @@
 use axum::body::Bytes;
+use axum::http::StatusCode;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use image::ImageReader;
-use std::io::Cursor;
+use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
-use crate::models::{NewPhoto, Photo};
+use crate::models::{NewPhoto, Photo, User};
 
 const UPLOAD_DIR: &str = "storage";
 
@@ -20,8 +21,7 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .expect("Error saving new photo");
 
     let img_name = format!(
-        "{}_{}.{}",
-        photo.user_id,
+        "{}.{}",
         photo.id,
         photo_form
             .photo_image
@@ -71,4 +71,25 @@ pub async fn get_photos_by_filters(uid: i32) -> Vec<Photo> {
         .select(Photo::as_select())
         .load(&mut connection())
         .unwrap()
+}
+
+pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), StatusCode> {
+    use crate::schema::photos::dsl::*;
+
+    let photo: Photo = photos
+        .find(photo_id)
+        .select(Photo::as_select())
+        .first(&mut connection())
+        .unwrap();
+
+    if curr_user.id == photo.user_id || curr_user.is_admin {
+        fs::remove_file(photo.path).expect("Error remove file");
+
+        diesel::delete(photos.filter(id.eq(photo_id)))
+            .execute(&mut connection())
+            .expect("Error deleting photo");
+        Ok(())
+    } else {
+        Err(StatusCode::FORBIDDEN)
+    }
 }

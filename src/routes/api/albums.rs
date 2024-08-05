@@ -12,8 +12,8 @@ use crate::{
 
 pub async fn router() -> Router {
     Router::new()
-        .route("/album", post(post_album))
-        .route("/album/:album_id", get(get_album).delete(delete_album))
+        .route("/", post(post_album))
+        .route("/:album_id", get(get_album).delete(delete_album))
 }
 
 #[utoipa::path(
@@ -26,9 +26,8 @@ pub async fn router() -> Router {
 )]
 pub async fn post_album(
     Json(new_album): Json<NewAlbum>,
-) -> Result<Json<Album>, (StatusCode, String)> {
-    let album = create_album(new_album).await;
-    Ok(Json(album))
+) -> Json<Album> {
+    Json(create_album(new_album).await)
 }
 
 #[utoipa::path(
@@ -36,12 +35,11 @@ pub async fn post_album(
     path = "/api/album/{album_id}",
     params(("album_id" = i32, Path, description = "Todo database id")),
     responses(
-        (status = 201, description = "Create album", body = StatusCode)
+        (status = 201, description = "Create album")
     )
 )]
-pub async fn delete_album(Path(album_id): Path<i32>) -> StatusCode {
+pub async fn delete_album(Path(album_id): Path<i32>) {
     delete_album_by_id(album_id).await;
-    StatusCode::OK
 }
 
 #[utoipa::path(
@@ -52,7 +50,7 @@ pub async fn delete_album(Path(album_id): Path<i32>) -> StatusCode {
         (status = 200, description = "Detail info about album", body = Album)
     )
 )]
-pub async fn get_album(Path(album_id): Path<i32>) -> Result<Json<Album>, (StatusCode, String)> {
+pub async fn get_album(Path(album_id): Path<i32>) -> Json<Album> {
     let album = get_album_by_id(album_id).await;
-    Ok(Json(album))
+    Json(album)
 }

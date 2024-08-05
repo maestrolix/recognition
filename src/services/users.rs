@@ -1,5 +1,8 @@
+use axum::http::StatusCode;
+use diesel::result::Error::NotFound;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 
+use crate::errors::Error;
 use crate::models::UsersQuery;
 use crate::{db_connection::connection, middleware::authorize::hash_password, models::*};
 
@@ -28,14 +31,11 @@ pub async fn get_users_with_filters(_params: UsersQuery) -> Vec<User> {
         .expect("Error loading posts")
 }
 
-pub async fn get_user_by_id(user_id: i32) -> User {
-    use crate::schema::users::dsl::*;
-
-    users
+pub async fn get_user_by_id(user_id: i32) -> Result<User, diesel::result::Error> {
+    crate::schema::users::dsl::users
         .find(user_id)
         .select(User::as_select())
         .first(&mut connection())
-        .unwrap()
 }
 
 pub async fn delete_user_by_id(user_id: i32) {
@@ -53,5 +53,5 @@ pub async fn create_user(mut new_user: NewUser) -> User {
         .values(&new_user)
         .returning(User::as_returning())
         .get_result(&mut connection())
-        .expect("Error saving new post")
+        .expect("Error save user in db")
 }
