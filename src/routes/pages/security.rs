@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tower_cookies::{Cookie, Cookies};
 
 use crate::{
-    auth::{encode_jwt, verify_password},
+    middleware::authorize::{encode_jwt, verify_password},
     services::users::get_user_by_email,
 };
 

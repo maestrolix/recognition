@@ -1,6 +1,6 @@
 use axum::{middleware, routing::post, Router};
 
-use crate::auth;
+use crate::middleware::{admin_permissions, authorize};
 
 pub mod albums;
 pub mod photos;
@@ -13,19 +13,19 @@ pub async fn api_router() -> Router {
             "/user",
             users::router()
                 .await
-                .layer(middleware::from_fn(auth::authorize)),
+                .layer(middleware::from_fn(authorize::authorize)),
         )
         .nest(
             "/album",
             albums::router()
                 .await
-                .layer(middleware::from_fn(auth::authorize)),
+                .layer(middleware::from_fn(authorize::authorize)),
         )
         .nest(
             "/photo",
             photos::router()
                 .await
-                .layer(middleware::from_fn(auth::authorize)),
+                .layer(middleware::from_fn(authorize::authorize)),
         )
         .route("/signin", post(security::sign_in))
 }

@@ -1,19 +1,31 @@
 use axum::{
     extract::{Extension, Path, Query},
     http::StatusCode,
+    middleware,
     routing::get,
     Json, Router,
 };
 
 use crate::{
+    middleware::admin_permissions,
     models::*,
     services::users::{create_user, delete_user_by_id, get_user_by_id, get_users_with_filters},
 };
 
 pub async fn router() -> Router {
     Router::new()
-        .route("/:user_id", get(get_user).delete(delete_user))
-        .route("/", get(get_users).post(post_user))
+        .route(
+            "/:user_id",
+            get(get_user)
+                .delete(delete_user)
+                .layer(middleware::from_fn(admin_permissions::admin_permissions)),
+        )
+        .route(
+            "/",
+            get(get_users)
+                .post(post_user)
+                .layer(middleware::from_fn(admin_permissions::admin_permissions)),
+        )
         .route("/current_user", get(get_current_user))
 }
 

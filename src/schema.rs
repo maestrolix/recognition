@@ -36,8 +36,4 @@ diesel::table! {
 diesel::joinable!(photos -> albums (album_id));
 diesel::joinable!(photos -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    albums,
-    photos,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(albums, photos, users,);

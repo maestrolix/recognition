@@ -4,7 +4,6 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-
 #[derive(Queryable, Selectable, Serialize, Deserialize, ToSchema, Clone, Debug)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -18,7 +17,7 @@ pub struct User {
     /// Пароль пользователя
     pub password: String,
     /// Возможности администратора
-    pub is_admin: bool
+    pub is_admin: bool,
 }
 
 #[derive(Insertable, Serialize, Deserialize, ToSchema, Clone, Debug)]
@@ -30,6 +29,8 @@ pub struct NewUser {
     pub email: String,
     /// Пароль пользователя
     pub password: String,
+    /// Возможности администратора
+    pub is_admin: bool,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, ToSchema, Clone, Debug)]
@@ -103,7 +104,7 @@ pub struct UsersQuery {
     pub username: Option<String>,
 }
 
-#[derive(TryFromMultipart, Debug)]
+#[derive(ToSchema, TryFromMultipart, Debug)]
 pub struct PhotoForm {
     pub photo_image: FieldData<Bytes>,
     pub title: String,
@@ -111,9 +112,8 @@ pub struct PhotoForm {
 }
 
 #[derive(ToSchema, Debug)]
-pub struct FormUtopia {
+pub struct PhotoFormUtopia {
     pub photo_image: Vec<u8>,
     pub title: String,
-    pub user_id: i32,
     pub album_id: i32,
 }

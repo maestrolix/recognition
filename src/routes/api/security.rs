@@ -2,7 +2,7 @@ use axum::{extract::Json, http::StatusCode};
 use tower_cookies::{Cookie, Cookies};
 
 use crate::{
-    auth::{encode_jwt, verify_password},
+    middleware::authorize::{encode_jwt, verify_password},
     models::*,
     services::users::get_user_by_email,
 };

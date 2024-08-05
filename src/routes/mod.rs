@@ -30,7 +30,7 @@ pub async fn craete_app() -> Router {
             security::sign_in
         ),
         components(
-            schemas(NewUser, User, UsersQuery, SignInData, FormUtopia, Photo, Album, NewAlbum)
+            schemas(NewUser, User, UsersQuery, SignInData, PhotoFormUtopia, Photo, Album, NewAlbum)
         ),
         tags(
             (name = "users", description = "Управление пользователями"),

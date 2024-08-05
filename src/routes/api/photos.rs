@@ -36,7 +36,7 @@ pub async fn get_photo(
     post,
     path = "/api/photo",
     tag = "photos",
-    request_body(content_type="multipart/form-data", content=FormUtopia),
+    request_body(content_type="multipart/form-data", content=PhotoFormUtopia),
     responses(
         (status = 201, description = "Add new photo", body = Photo)
     )

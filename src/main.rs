@@ -1,7 +1,7 @@
 use routes::craete_app;
 
-pub mod auth;
 pub mod db_connection;
+pub mod middleware;
 pub mod models;
 pub mod routes;
 pub mod schema;

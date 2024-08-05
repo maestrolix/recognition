@@ -1,7 +1,7 @@
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 
 use crate::models::UsersQuery;
-use crate::{auth::hash_password, db_connection::connection, models::*};
+use crate::{db_connection::connection, middleware::authorize::hash_password, models::*};
 
 pub async fn get_user_by_email(user_email: &str) -> Option<User> {
     use crate::schema::users::dsl::*;
@@ -48,7 +48,6 @@ pub async fn delete_user_by_id(user_id: i32) {
 
 pub async fn create_user(mut new_user: NewUser) -> User {
     new_user.password = hash_password(&new_user.password).unwrap();
-    dbg!(&new_user.password);
 
     diesel::insert_into(crate::schema::users::table)
         .values(&new_user)
