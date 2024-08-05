@@ -1,9 +1,4 @@
-use axum::{
-    extract::Path,
-    http::StatusCode,
-    routing::get,
-    Extension, Json, Router,
-};
+use axum::{extract::Path, http::StatusCode, routing::get, Extension, Json, Router};
 use axum_typed_multipart::TypedMultipart;
 
 use crate::{
@@ -53,7 +48,6 @@ pub async fn post_photo(
     create_photo(photo_form.0, curr_user.id).await;
     Ok(StatusCode::OK)
 }
-
 
 #[utoipa::path(
     get,

@@ -1,5 +1,5 @@
 use crate::models::*;
-use crate::routes::api::{photos, security, users};
+use crate::routes::api::{albums, photos, security, users};
 use api::api_router;
 use axum::Router;
 use pages::template_router;
@@ -24,13 +24,17 @@ pub async fn craete_app() -> Router {
             photos::post_photo,
             photos::get_photo,
             photos::get_photos,
+            albums::get_album,
+            albums::delete_album,
+            albums::post_album,
             security::sign_in
         ),
         components(
-            schemas(NewUser, User, UsersQuery, SignInData, FormUtopia, Photo)
+            schemas(NewUser, User, UsersQuery, SignInData, FormUtopia, Photo, Album, NewAlbum)
         ),
         tags(
             (name = "users", description = "Управление пользователями"),
+            (name = "albums", description = "Управление альбомами"),
             (name = "photos", description = "Управления фотографиями")
         )
     )]

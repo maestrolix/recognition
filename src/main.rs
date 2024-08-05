@@ -12,7 +12,6 @@ pub mod services;
 pub mod settings;
 pub mod utils;
 
-
 #[tokio::main]
 async fn main() {
     let app = craete_app().await;

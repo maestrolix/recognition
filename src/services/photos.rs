@@ -63,7 +63,6 @@ pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<Photo> {
     }
 }
 
-
 pub async fn get_photos_by_filters(uid: i32) -> Vec<Photo> {
     use crate::schema::photos::dsl::*;
 

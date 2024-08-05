@@ -18,7 +18,7 @@ pub async fn router() -> Router {
 
 #[utoipa::path(
     post,
-    path = "/album",
+    path = "/api/album",
     request_body = NewAlbum,
     responses(
         (status = 201, description = "Create album", body = Album)
@@ -33,7 +33,7 @@ pub async fn post_album(
 
 #[utoipa::path(
     delete,
-    path = "/album/{album_id}",
+    path = "/api/album/{album_id}",
     params(("album_id" = i32, Path, description = "Todo database id")),
     responses(
         (status = 201, description = "Create album", body = StatusCode)
@@ -46,7 +46,7 @@ pub async fn delete_album(Path(album_id): Path<i32>) -> StatusCode {
 
 #[utoipa::path(
     get,
-    path = "/album/{album_id}",
+    path = "/api/album/{album_id}",
     params(("album_id" = i32, Path, description = "Id of album")),
     responses(
         (status = 200, description = "Detail info about album", body = Album)
