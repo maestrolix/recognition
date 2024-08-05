@@ -12,16 +12,9 @@ pub mod services;
 pub mod settings;
 pub mod utils;
 
-struct CurrUser {
-    id: i32,
-    email: String,
-    username: String,
-}
 
 #[tokio::main]
 async fn main() {
-    // let user: Arc<Option<CurrUser>> = Arc::new(None); .layer(Extension(user))
-
     let app = craete_app().await;
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

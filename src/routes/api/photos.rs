@@ -1,7 +1,7 @@
 use axum::{
     extract::Path,
     http::StatusCode,
-    routing::{get, post},
+    routing::get,
     Extension, Json, Router,
 };
 use axum_typed_multipart::TypedMultipart;
