@@ -25,6 +25,7 @@ pub async fn craete_app() -> Router {
             photos::get_photo,
             photos::get_photos,
             photos::delete_photo,
+            photos::search_by_text,
             albums::get_album,
             albums::delete_album,
             albums::post_album,

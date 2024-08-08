@@ -3,13 +3,17 @@ use axum_typed_multipart::TypedMultipart;
 
 use crate::{
     models::{Photo, PhotoForm, User},
-    services::photos::{create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters},
+    services::photos::{
+        create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters,
+        search_by_text_service,
+    },
 };
 
 pub async fn router() -> Router {
     Router::new()
         .route("/", get(get_photos).post(post_photo))
         .route("/:photo_id", get(get_photo).delete(delete_photo))
+        .route("/search/:text", get(search_by_text))
 }
 
 #[utoipa::path(
@@ -71,4 +75,19 @@ pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>)
         Ok(()) => StatusCode::OK,
         Err(code) => code,
     }
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/photo/search/{text}",
+    tag = "photos",
+    params(
+        ("text", description = "Text to find image")
+    ),
+    responses(
+        (status = 200, description = "Search image by text", body = Vec<f32>)
+    )
+)]
+pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<Vec<f32>> {
+    Json(search_by_text_service(text, curr_user).await)
 }

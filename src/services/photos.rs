@@ -5,7 +5,9 @@ use image::ImageReader;
 use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
+use crate::fashion_clip::embed::{EmbedImage, EmbedText};
 use crate::models::{NewPhoto, Photo, User};
+use crate::utils::cosine_similarity;
 
 const UPLOAD_DIR: &str = "storage";
 
@@ -92,4 +94,42 @@ pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), St
     } else {
         Err(StatusCode::FORBIDDEN)
     }
+}
+
+pub async fn search_by_text_service(text: String, curr_user: User) -> Vec<f32> {
+    let embed_text = EmbedText::new(
+        "models/text/model.onnx",
+        "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+    )
+    .unwrap();
+    let embed_image = EmbedImage::new("models/image/model.onnx").unwrap();
+
+    let embedding_text = match embed_text.encode(&text) {
+        Ok(d) => d.into_iter().flat_map(|i| vec![i]).collect::<Vec<f32>>(),
+        Err(e) => panic!("\n{e}\n"),
+    };
+    println!("\n{:?}", embedding_text);
+
+    let photos_db = get_photos_by_filters(curr_user.id).await;
+
+    let mut img_embeddings: Vec<(Vec<f32>, String)> = Vec::new();
+
+    for photo in photos_db {
+        
+        let image = std::fs::read(&photo.path).unwrap();
+        let embedding_img = match embed_image.encode(image) {
+            Ok(d) => d,
+            Err(e) => panic!("\n{e}\n"),
+        };
+        img_embeddings.push((embedding_img, photo.path));
+    }
+
+    for img_emb in img_embeddings {
+        let cos_sim = cosine_similarity(&img_emb.0, &embedding_text, false);
+        println!("Text: {}", text);
+        println!("Score: {}", cos_sim);
+        println!("Path: {}", img_emb.1);
+    }
+
+    return embedding_text;
 }
