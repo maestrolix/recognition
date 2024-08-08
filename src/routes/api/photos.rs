@@ -85,9 +85,9 @@ pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>)
         ("text", description = "Text to find image")
     ),
     responses(
-        (status = 200, description = "Search image by text", body = Vec<f32>)
+        (status = 200, description = "Search image by text", body = Photo)
     )
 )]
-pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<Vec<f32>> {
+pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<Photo> {
     Json(search_by_text_service(text, curr_user).await)
 }

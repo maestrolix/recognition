@@ -60,15 +60,17 @@ pub struct NewPhoto {
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
+    pub embedding: Option<Vec<f32>>
 }
 
 impl NewPhoto {
-    pub fn from_form(photo: &PhotoForm, uid: i32) -> Self {
+    pub fn from_form(photo: &PhotoForm, embedding: Vec<f32>, uid: i32) -> Self {
         NewPhoto {
             path: "".to_string(),
             title: Some(photo.title.clone()),
             user_id: uid,
             album_id: Some(photo.album_id),
+            embedding: Some(embedding)
         }
     }
 }
