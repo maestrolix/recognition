@@ -125,7 +125,7 @@ impl ImgSimilarity {
 
 
 
-pub async fn search_by_text_service(text: String, curr_user: User) -> ListPhoto {
+pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
     use crate::schema::photos::dsl::*;
 
     let embed_text = EmbedText::new(
@@ -139,7 +139,7 @@ pub async fn search_by_text_service(text: String, curr_user: User) -> ListPhoto 
         Err(e) => panic!("\n{e}\n"),
     };
     let photos_db = photos
-        .filter(user_id.eq(curr_user.id))
+        .filter(user_id.eq(uid))
         .select(Photo::as_select())
         .load(&mut connection())
         .unwrap();
@@ -155,7 +155,7 @@ pub async fn search_by_text_service(text: String, curr_user: User) -> ListPhoto 
         }
     }
 
-    get_photo_by_id(max_similarity.img_id, curr_user.id).await.unwrap()
+    get_photo_by_id(max_similarity.img_id, uid).await.unwrap()
 }
 
 

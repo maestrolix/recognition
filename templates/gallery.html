@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  
+    <title>Gallery page</title>
+  
+    <link rel='stylesheet prefetch' href='http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900&subset=latin,latin-ext'>
+
+    <link rel="stylesheet" href="gallery/css/style.css">
+
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="box header">
+          <div class="search">
+            <form method="get" action="">
+              <input type="text" name="text" placeholder="Search in all photos...">
+            </form>
+          </div>
+        </div>
+        <div class="box sidebar">
+          <div class="menu">
+            <div class="sections">
+              <a href="/page/gallery">
+                <div class="item all">
+                  <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp All photos
+                </div>
+              </a>
+              <a>
+                <div class="item favourites">
+                  <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp Favourites
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="box content">
+          <div class="container">
+            <div class="common_info">
+                <div class="title"><i class="glyphicon glyphicon-cloud"></i>&nbsp All photos</div>
+                <div class="info">2321 photos, 1231 vedeos</div>
+            </div>
+            <div class="main">
+                <div class="date_interval">October 1, 2078 - October 23, 2078</div>
+                <div class="photos">
+                  {% for photo in photos %}
+                    <img src="http://0.0.0.0:3000/{{ photo.path }}" alt="" style="height: 190px;">
+                  {% endfor %}
+                </div>
+            </div>
+          </div>
+      </div>
+</body>
+</html>

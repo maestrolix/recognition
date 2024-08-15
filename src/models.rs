@@ -140,3 +140,8 @@ pub struct PhotoFormUtopia {
     pub title: String,
     pub album_id: i32,
 }
+
+#[derive(Deserialize, IntoParams, ToSchema)]
+pub struct SearchQuery {
+    pub text: Option<String>,
+}

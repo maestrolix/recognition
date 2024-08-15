@@ -1,0 +1,149 @@
+
+.sidebar {
+  grid-area: sidebar;
+}
+
+.content {
+  grid-area: content;
+}
+
+.header {
+  grid-area: header;
+}
+
+.wrapper {
+    display: grid;
+    grid-template-columns: 260px 820px 820px;
+    grid-template-areas:
+    "header  header  header"
+    "sidebar content content";
+    background-color: #202020;
+    color: #444;
+  }
+
+.box {
+  background-color: #444;
+  color: #fff;
+  font-size: 150%;
+}
+
+.header {
+    height: 76px;
+    background-color: #202020;
+}
+
+
+.search {
+  height: 49px;
+  width: 650px;
+  background-color: #373737;
+  margin: auto;
+  color: #8B8B8B;
+  border-radius: 0px 0px 10px 10px;
+}
+
+.search input {
+  height: 49px;
+  width: 650px;
+  padding-left: 15px;
+  border-radius: 0px 0px 10px 10px;
+  background: #373737;
+  font-size: 21px;
+  outline: none;
+  border: none;
+  color: #8B8B8B;
+}
+
+.search input::placeholder {
+  color: #8B8B8B;
+}
+
+.sidebar {
+    height: 100%;
+    border: #fff;
+    background-color: #202020;
+}
+
+.menu {
+  margin-top: 40px;
+  padding-left: 2px
+}
+
+.sections {
+  border-bottom: 2px solid #373737;
+}
+
+.sections a {
+  height: 30px;
+  width: 250px;
+  color: #9E9E9E;
+  background-color: #9E9E9E;
+}
+
+
+.sections a:hover {
+  text-decoration: none;
+  color: #9E9E9E;
+}
+
+.sections a:hover div {
+  text-decoration: none;
+  color: #9E9E9E;
+  margin-left: -2px;
+  background-color: #373737;
+  border-left: 2px solid #60CDFF;
+  cursor: pointer;
+}
+
+.item {
+  padding-left: 10px;
+  margin-bottom: 5px;
+}
+
+
+.content {
+  border-radius: 20px 0px 0px 0px; 
+  min-height: 94vh;
+}
+
+.container {
+  width: 1450px;
+  margin-left: 55px;
+  padding-top: 40px;
+}
+
+.common_info {
+  margin-left: 3px;
+}
+
+
+.title {
+  color: #C1C1C1;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+
+.info {
+  font-size: 14px;
+  color: #9E9E9E;
+}
+
+
+.main {
+  margin-top: 40px;
+}
+
+.date_interval {
+  margin-left: 3px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #9E9E9E;
+  margin-bottom: 5px;
+}
+
+.photos img {
+  margin: 3px;
+  margin-bottom: 6px;
+  border-radius: 5px;
+}
