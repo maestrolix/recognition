@@ -1,6 +1,7 @@
 use axum::body::Bytes;
 use axum_typed_multipart::{FieldData, TryFromMultipart};
 use diesel::prelude::*;
+use pgvector::Vector;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
@@ -33,7 +34,7 @@ pub struct NewUser {
     pub is_admin: bool,
 }
 
-#[derive(Queryable, Selectable, Serialize, Deserialize, ToSchema, Clone, Debug)]
+#[derive(Queryable, Selectable, ToSchema, Clone, Debug)]
 #[diesel(table_name = crate::schema::photos)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Photo {
@@ -47,9 +48,29 @@ pub struct Photo {
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
+    pub embedding: Option<Vector>
 }
 
-#[derive(Insertable, Serialize, Deserialize, ToSchema, Clone, Debug, Default)]
+
+#[derive(Queryable, Serialize, Deserialize, Selectable, ToSchema, Clone, Debug)]
+#[diesel(table_name = crate::schema::photos)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct ListPhoto {
+    /// Id изображения
+    pub id: i32,
+    /// Путь к файлу изображения
+    pub path: String,
+    /// Наименование изображения
+    pub title: Option<String>,
+    /// Id пользователя, загрузившего изображение
+    pub user_id: i32,
+    /// Id альбома
+    pub album_id: Option<i32>
+}
+
+
+
+#[derive(Insertable, ToSchema, Clone, Debug, Default)]
 #[diesel(table_name = crate::schema::photos)]
 pub struct NewPhoto {
     /// Путь к файлу изображения
@@ -60,15 +81,17 @@ pub struct NewPhoto {
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
+    pub embedding: Option<Vector>
 }
 
 impl NewPhoto {
-    pub fn from_form(photo: &PhotoForm, uid: i32) -> Self {
+    pub fn from_form(photo: &PhotoForm, embedding: Vec<f32>, uid: i32) -> Self {
         NewPhoto {
             path: "".to_string(),
             title: Some(photo.title.clone()),
             user_id: uid,
             album_id: Some(photo.album_id),
+            embedding: Some(Vector::from(embedding))
         }
     }
 }

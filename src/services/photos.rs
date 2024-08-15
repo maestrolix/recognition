@@ -2,11 +2,12 @@ use axum::body::Bytes;
 use axum::http::StatusCode;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use image::ImageReader;
+use core::f32;
 use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
 use crate::fashion_clip::embed::{EmbedImage, EmbedText};
-use crate::models::{NewPhoto, Photo, User};
+use crate::models::{ListPhoto, NewPhoto, Photo, User};
 use crate::utils::cosine_similarity;
 
 const UPLOAD_DIR: &str = "storage";
@@ -14,7 +15,17 @@ const UPLOAD_DIR: &str = "storage";
 pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
     use crate::schema::photos::dsl::*;
 
-    let new_photo = NewPhoto::from_form(&photo_form, uid);
+    let img_content = photo_form.photo_image.contents.clone();
+    
+    // TODO: Вынести логику работы с вектором и организовать на уровне State app
+    let embed_image = EmbedImage::new("models/image/model.onnx").unwrap();
+    let image: Vec<u8>  = img_content.clone().into();
+    let embedding_img = match embed_image.encode(image) {
+        Ok(d) => d,
+        Err(e) => panic!("\n{e}\n"),
+    };
+
+    let new_photo = NewPhoto::from_form(&photo_form, embedding_img, uid);
 
     let photo = diesel::insert_into(photos)
         .values(&new_photo)
@@ -30,10 +41,9 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
             .metadata
             .content_type
             .unwrap()
-            .split("/")
+            .split('/')
             .collect::<Vec<&str>>()[1]
     );
-    let img_content = photo_form.photo_image.contents.clone();
     upload_image(img_content, img_name.clone(), UPLOAD_DIR.to_string()).await;
 
     diesel::update(photos.find(photo.id))
@@ -41,6 +51,7 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .execute(&mut connection())
         .unwrap();
 }
+
 
 pub async fn upload_image(content: Bytes, img_name: String, upload_dir: String) {
     let img = ImageReader::new(Cursor::new(content.clone()))
@@ -51,13 +62,13 @@ pub async fn upload_image(content: Bytes, img_name: String, upload_dir: String) 
     img.save(format!("{upload_dir}/{img_name}")).unwrap();
 }
 
-pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<Photo> {
+pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<ListPhoto> {
     use crate::schema::photos::dsl::*;
 
     match photos
         .find(photo_id)
         .filter(user_id.eq(uid))
-        .select(Photo::as_select())
+        .select(ListPhoto::as_select())
         .first(&mut connection())
     {
         Ok(photo) => Some(photo),
@@ -65,12 +76,12 @@ pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<Photo> {
     }
 }
 
-pub async fn get_photos_by_filters(uid: i32) -> Vec<Photo> {
+pub async fn get_photos_by_filters(uid: i32) -> Vec<ListPhoto> {
     use crate::schema::photos::dsl::*;
 
     photos
         .filter(user_id.eq(uid))
-        .select(Photo::as_select())
+        .select(ListPhoto::as_select())
         .load(&mut connection())
         .unwrap()
 }
@@ -96,40 +107,55 @@ pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), St
     }
 }
 
-pub async fn search_by_text_service(text: String, curr_user: User) -> Vec<f32> {
+
+struct ImgSimilarity {
+    cos_sim: f32,
+    img_id: i32,
+}
+
+
+impl ImgSimilarity {
+    pub fn new(cos_sim: f32, img_id: i32) -> Self {
+        ImgSimilarity {
+            cos_sim,
+            img_id
+        }
+    }
+}
+
+
+
+pub async fn search_by_text_service(text: String, curr_user: User) -> ListPhoto {
+    use crate::schema::photos::dsl::*;
+
     let embed_text = EmbedText::new(
         "models/text/model.onnx",
         "sentence-transformers/clip-ViT-B-32-multilingual-v1",
     )
     .unwrap();
-    let embed_image = EmbedImage::new("models/image/model.onnx").unwrap();
 
     let embedding_text = match embed_text.encode(&text) {
         Ok(d) => d.into_iter().flat_map(|i| vec![i]).collect::<Vec<f32>>(),
         Err(e) => panic!("\n{e}\n"),
     };
-    println!("\n{:?}", embedding_text);
+    let photos_db = photos
+        .filter(user_id.eq(curr_user.id))
+        .select(Photo::as_select())
+        .load(&mut connection())
+        .unwrap();
 
-    let photos_db = get_photos_by_filters(curr_user.id).await;
-
-    let mut img_embeddings: Vec<(Vec<f32>, String)> = Vec::new();
+    let mut max_similarity = ImgSimilarity::new(f32::MIN, 0);
 
     for photo in photos_db {
-        
-        let image = std::fs::read(&photo.path).unwrap();
-        let embedding_img = match embed_image.encode(image) {
-            Ok(d) => d,
-            Err(e) => panic!("\n{e}\n"),
-        };
-        img_embeddings.push((embedding_img, photo.path));
+        let cos_sim = cosine_similarity(&photo.embedding.unwrap().to_vec(), &embedding_text, false);
+
+        if cos_sim > max_similarity.cos_sim {
+            max_similarity.cos_sim = cos_sim;
+            max_similarity.img_id = photo.id;
+        }
     }
 
-    for img_emb in img_embeddings {
-        let cos_sim = cosine_similarity(&img_emb.0, &embedding_text, false);
-        println!("Text: {}", text);
-        println!("Score: {}", cos_sim);
-        println!("Path: {}", img_emb.1);
-    }
-
-    return embedding_text;
+    get_photo_by_id(max_similarity.img_id, curr_user.id).await.unwrap()
 }
+
+

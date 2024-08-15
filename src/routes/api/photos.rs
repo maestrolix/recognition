@@ -1,8 +1,10 @@
 use axum::{extract::Path, http::StatusCode, routing::get, Extension, Json, Router};
 use axum_typed_multipart::TypedMultipart;
 
+use crate::models::ListPhoto;
+
 use crate::{
-    models::{Photo, PhotoForm, User},
+    models::{PhotoForm, User},
     services::photos::{
         create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters,
         search_by_text_service,
@@ -22,17 +24,17 @@ pub async fn router() -> Router {
     tag = "photos",
     params(("photo_id" = i32, Path, description = "Photo id")),
     responses(
-        (status = 200, description = "Get photo info", body = Photo)
+        (status = 200, description = "Get photo info", body = ListPhoto)
     )
 )]
 pub async fn get_photo(
     curr_user: Extension<User>,
     Path(photo_id): Path<i32>,
-) -> Result<Json<Photo>, StatusCode> {
+) -> Result<Json<ListPhoto>, StatusCode> {
     if let Some(photo) = get_photo_by_id(photo_id, curr_user.id).await {
-        return Ok(Json(photo));
+        Ok(Json(photo))
     } else {
-        return Err(StatusCode::FORBIDDEN);
+        Err(StatusCode::FORBIDDEN)
     }
 }
 
@@ -57,7 +59,7 @@ pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<P
         (status = 200, description = "Get all photos of user", body = Vec<Photo>)
     )
 )]
-pub async fn get_photos(curr_user: Extension<User>) -> Json<Vec<Photo>> {
+pub async fn get_photos(curr_user: Extension<User>) -> Json<Vec<ListPhoto>> {
     Json(get_photos_by_filters(curr_user.id).await)
 }
 
@@ -85,9 +87,9 @@ pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>)
         ("text", description = "Text to find image")
     ),
     responses(
-        (status = 200, description = "Search image by text", body = Vec<f32>)
+        (status = 200, description = "Search image by text", body = Photo)
     )
 )]
-pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<Vec<f32>> {
+pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<ListPhoto> {
     Json(search_by_text_service(text, curr_user).await)
 }

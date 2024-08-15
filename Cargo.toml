@@ -23,6 +23,7 @@ axum-extra = { version = "0.9.3", features = ["typed-header"] }
 bcrypt = "0.15.1"
 chrono = { version = "0.4.34", features = ["serde"] }
 tower-cookies = "=0.10.0"
+
 # Для шаблонизатора
 askama = "0.12.1"
 tracing = "0.1"
@@ -38,3 +39,7 @@ ort = {version = "1.16.3", features = ["load-dynamic"]}
 itertools = "0.13.0"
 num_cpus = "1.16.0"
 rayon = "1.10.0"
+
+# PgVector
+pgvector = { version = "0.4", features = ["diesel", "postgres"] }
+postgres = "0.19"

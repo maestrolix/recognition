@@ -1,6 +1,9 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use pgvector::sql_types::Vector;
+
     albums (id) {
         id -> Int4,
         #[max_length = 50]
@@ -9,6 +12,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use pgvector::sql_types::Vector;
+
     photos (id) {
         id -> Int4,
         path -> Text,
@@ -16,10 +22,14 @@ diesel::table! {
         title -> Nullable<Varchar>,
         user_id -> Int4,
         album_id -> Nullable<Int4>,
+        embedding -> Nullable<Vector>,
     }
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use pgvector::sql_types::Vector;
+
     users (id) {
         id -> Int4,
         #[max_length = 50]
@@ -36,4 +46,8 @@ diesel::table! {
 diesel::joinable!(photos -> albums (album_id));
 diesel::joinable!(photos -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(albums, photos, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    albums,
+    photos,
+    users,
+);
