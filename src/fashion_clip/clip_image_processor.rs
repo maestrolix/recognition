@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use image::{imageops::FilterType, ImageBuffer, Rgb, ImageReader};
+use image::{imageops::FilterType, ImageBuffer, ImageReader, Rgb};
 use ndarray::{Array4, ArrayBase, CowArray, CowRepr, Dim};
 
 #[allow(dead_code)]

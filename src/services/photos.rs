@@ -1,8 +1,8 @@
 use axum::body::Bytes;
 use axum::http::StatusCode;
+use core::f32;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use image::ImageReader;
-use core::f32;
 use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
@@ -16,10 +16,10 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
     use crate::schema::photos::dsl::*;
 
     let img_content = photo_form.photo_image.contents.clone();
-    
+
     // TODO: Вынести логику работы с вектором и организовать на уровне State app
     let embed_image = EmbedImage::new("models/image/model.onnx").unwrap();
-    let image: Vec<u8>  = img_content.clone().into();
+    let image: Vec<u8> = img_content.clone().into();
     let embedding_img = match embed_image.encode(image) {
         Ok(d) => d,
         Err(e) => panic!("\n{e}\n"),
@@ -51,7 +51,6 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .execute(&mut connection())
         .unwrap();
 }
-
 
 pub async fn upload_image(content: Bytes, img_name: String, upload_dir: String) {
     let img = ImageReader::new(Cursor::new(content.clone()))
@@ -107,23 +106,16 @@ pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), St
     }
 }
 
-
 struct ImgSimilarity {
     cos_sim: f32,
     img_id: i32,
 }
 
-
 impl ImgSimilarity {
     pub fn new(cos_sim: f32, img_id: i32) -> Self {
-        ImgSimilarity {
-            cos_sim,
-            img_id
-        }
+        ImgSimilarity { cos_sim, img_id }
     }
 }
-
-
 
 pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
     use crate::schema::photos::dsl::*;
@@ -157,5 +149,3 @@ pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
 
     get_photo_by_id(max_similarity.img_id, uid).await.unwrap()
 }
-
-

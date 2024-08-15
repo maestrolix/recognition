@@ -13,8 +13,7 @@ use crate::{
 };
 
 pub async fn router() -> Router {
-    Router::new()
-        .route("/", get(gallery_page))
+    Router::new().route("/", get(gallery_page))
 }
 
 async fn gallery_page(Query(searh_photo): Query<SearchQuery>) -> impl IntoResponse {

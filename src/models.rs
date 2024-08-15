@@ -48,9 +48,8 @@ pub struct Photo {
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
-    pub embedding: Option<Vector>
+    pub embedding: Option<Vector>,
 }
-
 
 #[derive(Queryable, Serialize, Deserialize, Selectable, ToSchema, Clone, Debug)]
 #[diesel(table_name = crate::schema::photos)]
@@ -65,10 +64,8 @@ pub struct ListPhoto {
     /// Id пользователя, загрузившего изображение
     pub user_id: i32,
     /// Id альбома
-    pub album_id: Option<i32>
+    pub album_id: Option<i32>,
 }
-
-
 
 #[derive(Insertable, ToSchema, Clone, Debug, Default)]
 #[diesel(table_name = crate::schema::photos)]
@@ -81,7 +78,7 @@ pub struct NewPhoto {
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
-    pub embedding: Option<Vector>
+    pub embedding: Option<Vector>,
 }
 
 impl NewPhoto {
@@ -91,7 +88,7 @@ impl NewPhoto {
             title: Some(photo.title.clone()),
             user_id: uid,
             album_id: Some(photo.album_id),
-            embedding: Some(Vector::from(embedding))
+            embedding: Some(Vector::from(embedding)),
         }
     }
 }

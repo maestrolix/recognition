@@ -90,6 +90,9 @@ pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>)
         (status = 200, description = "Search image by text", body = Photo)
     )
 )]
-pub async fn search_by_text(Path(text): Path<String>, Extension(curr_user): Extension<User>) -> Json<ListPhoto> {
+pub async fn search_by_text(
+    Path(text): Path<String>,
+    Extension(curr_user): Extension<User>,
+) -> Json<ListPhoto> {
     Json(search_by_text_service(text, curr_user.id).await)
 }

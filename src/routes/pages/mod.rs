@@ -1,8 +1,8 @@
 use axum::Router;
 use tower_http::services::ServeDir;
 
-pub mod security;
 pub mod gallery;
+pub mod security;
 
 pub async fn template_router() -> Router {
     Router::new()
