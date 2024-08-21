@@ -9,50 +9,118 @@
     <link rel='stylesheet prefetch' href='http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900&subset=latin,latin-ext'>
 
     <link rel="stylesheet" href="gallery/css/style.css">
+    <link rel="stylesheet" href="gallery/css/image_zoom.css">
 
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="box header">
-          <div class="search">
-            <form method="get" action="">
-              <input type="text" name="text" placeholder="Search in all photos...">
-            </form>
-          </div>
+  <div class="wrapper">
+      <div class="box header">
+        <div class="search">
+          <form method="get" action="">
+            <input type="text" name="text" placeholder="Search in all photos...">
+          </form>
         </div>
-        <div class="box sidebar">
-          <div class="menu">
-            <div class="sections">
-              <a href="/page/gallery">
-                <div class="item all">
-                  <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp All photos
-                </div>
-              </a>
-              <a>
-                <div class="item favourites">
-                  <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp Favourites
-                </div>
-              </a>
+        <div class="import">
+          <button onclick="showPopup()">
+            <div>
+              <i class="glyphicon glyphicon-cloud"></i>&nbsp Import
             </div>
-          </div>
+          </button>
         </div>
-        <div class="box content">
-          <div class="container">
-            <div class="common_info">
-                <div class="title"><i class="glyphicon glyphicon-cloud"></i>&nbsp All photos</div>
-                <div class="info">2321 photos, 1231 vedeos</div>
-            </div>
-            <div class="main">
-                <div class="date_interval">October 1, 2078 - October 23, 2078</div>
-                <div class="photos">
-                  {% for photo in photos %}
-                    <img src="http://0.0.0.0:3000/{{ photo.path }}" alt="" style="height: 190px;">
-                  {% endfor %}
-                </div>
-            </div>
-          </div>
       </div>
+      <!-- POPUP -->
+      <div id="import_file">
+        <div id="popup">
+           <form class="box create_image" method="post" enctype="multipart/form-data">
+ 
+             <div class="title">Upload new image to collection!</div>
+
+             <div class="input photo_title">
+                <label for="title">Title</label>
+                <input type="text" name="title" id="title">
+                <span class="spin"></span>
+             </div>
+       
+             <div class="input photo_album">
+                <select name="album_id" size="{{albums.len()}}">
+                  {% for album in albums %}
+                    <option value="{{album.id}}">{{album.title}}</option>
+                  {% endfor %}
+                </select>
+             </div>
+
+             <div class="profile-picture">
+              <h1 class="upload-icon">
+                <i class="fa fa-plus fa-2x" aria-hidden="true"></i>
+              </h1>
+              <input
+                class="file-uploader"
+                type="file"
+                name="photo_image"
+                id="photo_image"
+                onchange="upload()"
+                accept="image/*"
+              />
+            </div>
+
+            <div class="create_image">
+               <button><span>Create image</span> <i class="fa fa-check"></i></button>
+            </div>
+          </form>
+          <button onclick="hidePopup()">Закрыть окно</button>
+        </div>
+      </div>
+      <div class="box sidebar">
+        <div class="menu">
+          <div class="sections">
+            <a href="/page/gallery">
+              <div class="item all">
+                <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp All photos
+              </div>
+            </a>
+            <a>
+              <div class="item favourites">
+                <i class="glyphicon glyphicon-cloud"></i>&nbsp&nbsp Favourites
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="box content">
+        <div class="container">
+          <div class="common_info">
+              <div class="title"><i class="glyphicon glyphicon-cloud"></i>&nbsp All photos</div>
+              <div class="info">2321 photos, 1231 vedeos</div>
+          </div>
+          <div class="main">
+              <div class="date_interval">October 1, 2078 - October 23, 2078</div>
+              <div class="photos">
+                {% for photo in photos %}
+                  <img id="myImg{{photo.id}}" onclick="zoom_img('{{photo.id}}')" class="my_img" src="http://0.0.0.0:3000/{{ photo.path }}" alt="" style="height: 190px;">
+                {% endfor %}
+              </div>
+              <!-- The Modal -->
+              <div id="myModal">
+                <div class="model_background"></div>
+                <img class="modal-content" id="img01">
+              </div>
+              <!-- End Image Zoom HTML -->
+          </div>
+        </div>
+      </div>
+  </div>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="gallery/js/index.js"></script>
+  <script src="gallery/js/image_zoom.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+

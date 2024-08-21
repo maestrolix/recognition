@@ -100,14 +100,14 @@ pub struct Album {
     /// Id альбома
     pub id: i32,
     /// Наименование альбома
-    pub title: Option<String>,
+    pub title: String,
 }
 
 #[derive(Insertable, Serialize, Deserialize, ToSchema, Clone, Debug, Default)]
 #[diesel(table_name = crate::schema::albums)]
 pub struct NewAlbum {
     /// Наименование альбома
-    pub title: Option<String>,
+    pub title: String,
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -124,11 +124,12 @@ pub struct UsersQuery {
     pub username: Option<String>,
 }
 
-#[derive(ToSchema, TryFromMultipart, Debug)]
+#[derive(TryFromMultipart, Debug)]
 pub struct PhotoForm {
-    pub photo_image: FieldData<Bytes>,
     pub title: String,
     pub album_id: i32,
+    #[form_data(limit = "unlimited")]
+    pub photo_image: FieldData<Bytes>,
 }
 
 #[derive(ToSchema, Debug)]

@@ -30,3 +30,13 @@ pub async fn create_album(new_album: NewAlbum) -> Album {
         .get_result(&mut connection())
         .expect("Error saving new post")
 }
+
+pub async fn get_albums_with_filters() -> Vec<Album> {
+    use crate::schema::albums::dsl::*;
+
+    albums
+        .limit(5)
+        .select(Album::as_select())
+        .load(&mut connection())
+        .expect("Error loading albums")
+}

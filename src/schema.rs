@@ -7,7 +7,7 @@ diesel::table! {
     albums (id) {
         id -> Int4,
         #[max_length = 50]
-        title -> Nullable<Varchar>,
+        title -> Varchar,
     }
 }
 

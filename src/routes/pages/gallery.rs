@@ -1,36 +1,53 @@
 use askama::Template;
 use axum::{
-    extract::Query,
+    debug_handler,
+    extract::{DefaultBodyLimit, Query},
     http::StatusCode,
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Redirect, Response},
     routing::get,
     Router,
 };
+use axum_typed_multipart::TypedMultipart;
+use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::{
-    models::{ListPhoto, SearchQuery},
-    services::photos::{get_photos_by_filters, search_by_text_service},
+    models::{Album, ListPhoto, SearchQuery},
+    routes::PhotoForm,
+    services::{
+        albums::get_albums_with_filters,
+        photos::{create_photo, get_photos_by_filters, search_by_text_service},
+    },
 };
 
 pub async fn router() -> Router {
-    Router::new().route("/", get(gallery_page))
+    Router::new().route("/", get(gallery_page).post(post_photo))
 }
 
 async fn gallery_page(Query(searh_photo): Query<SearchQuery>) -> impl IntoResponse {
     let mut photos = vec![];
     if let Some(text) = searh_photo.text {
-        photos.push(search_by_text_service(text, 1).await);
+        photos.push(search_by_text_service(text, 2).await);
     } else {
-        photos = get_photos_by_filters(1).await;
+        photos = get_photos_by_filters(2).await;
     }
-    let template = GalleryTemplate { photos };
+    let albums = get_albums_with_filters().await;
+    let template = GalleryTemplate { photos, albums };
     HtmlTemplate(template)
+}
+
+#[debug_handler]
+pub async fn post_photo(
+    TypedMultipart(photo_form): TypedMultipart<PhotoForm>,
+) -> impl IntoResponse {
+    create_photo(photo_form, 2).await;
+    Redirect::to("/page/gallery")
 }
 
 #[derive(Template)]
 #[template(path = "gallery.html")]
 struct GalleryTemplate {
     photos: Vec<ListPhoto>,
+    albums: Vec<Album>,
 }
 
 struct HtmlTemplate<T>(T);

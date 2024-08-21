@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use ndarray::{Array, Array2, ArrayBase, CowArray, CowRepr, Dim, IxDynImpl};
+use ndarray::{Array2, ArrayBase, CowArray, CowRepr, Dim, IxDynImpl};
 use ort::{Environment, ExecutionProvider, GraphOptimizationLevel, Session, SessionBuilder, Value};
 use std::error::Error;
 use tokenizers::{Encoding, Tokenizer};

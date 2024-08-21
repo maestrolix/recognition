@@ -1,6 +1,7 @@
 use crate::models::*;
 use crate::routes::api::{albums, photos, security, users};
 use api::api_router;
+use axum::extract::DefaultBodyLimit;
 use axum::Router;
 use pages::template_router;
 use tower_cookies::CookieManagerLayer;
@@ -48,4 +49,5 @@ pub async fn craete_app() -> Router {
         .nest("/page", template_router().await)
         .nest_service("/storage", ServeDir::new("storage"))
         .layer(CookieManagerLayer::new())
+        .layer(DefaultBodyLimit::max(100000000))
 }

@@ -12,6 +12,8 @@ pub mod utils;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let app = craete_app().await;
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
