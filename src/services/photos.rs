@@ -7,7 +7,7 @@ use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
 use crate::fashion_clip::embed::{EmbedImage, EmbedText};
-use crate::models::{ListPhoto, NewPhoto, Photo, User};
+use crate::models::{ListPhoto, NewPhoto, Photo};
 use crate::utils::cosine_similarity;
 
 const UPLOAD_DIR: &str = "storage";
@@ -61,12 +61,11 @@ pub async fn upload_image(content: Bytes, img_name: String, upload_dir: String) 
     img.save(format!("{upload_dir}/{img_name}")).unwrap();
 }
 
-pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<ListPhoto> {
+pub async fn get_photo_by_id(photo_id: i32) -> Option<ListPhoto> {
     use crate::schema::photos::dsl::*;
 
     match photos
         .find(photo_id)
-        .filter(user_id.eq(uid))
         .select(ListPhoto::as_select())
         .first(&mut connection())
     {
@@ -75,17 +74,16 @@ pub async fn get_photo_by_id(photo_id: i32, uid: i32) -> Option<ListPhoto> {
     }
 }
 
-pub async fn get_photos_by_filters(uid: i32) -> Vec<ListPhoto> {
+pub async fn get_photos_by_filters() -> Vec<ListPhoto> {
     use crate::schema::photos::dsl::*;
 
     photos
-        .filter(user_id.eq(uid))
         .select(ListPhoto::as_select())
         .load(&mut connection())
         .unwrap()
 }
 
-pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), StatusCode> {
+pub async fn delete_photo_by_id(photo_id: i32) -> Result<(), StatusCode> {
     use crate::schema::photos::dsl::*;
 
     let photo: Photo = photos
@@ -94,16 +92,12 @@ pub async fn delete_photo_by_id(photo_id: i32, curr_user: User) -> Result<(), St
         .first(&mut connection())
         .unwrap();
 
-    if curr_user.id == photo.user_id || curr_user.is_admin {
-        fs::remove_file(photo.path).expect("Error remove file");
+    fs::remove_file(photo.path).expect("Error remove file");
 
-        diesel::delete(photos.filter(id.eq(photo_id)))
-            .execute(&mut connection())
-            .expect("Error deleting photo");
-        Ok(())
-    } else {
-        Err(StatusCode::FORBIDDEN)
-    }
+    diesel::delete(photos.filter(id.eq(photo_id)))
+        .execute(&mut connection())
+        .expect("Error deleting photo");
+    Ok(())
 }
 
 struct ImgSimilarity {
@@ -117,7 +111,7 @@ impl ImgSimilarity {
     }
 }
 
-pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
+pub async fn search_by_text_service(text: String) -> ListPhoto {
     use crate::schema::photos::dsl::*;
 
     let embed_text = EmbedText::new(
@@ -131,7 +125,6 @@ pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
         Err(e) => panic!("\n{e}\n"),
     };
     let photos_db = photos
-        .filter(user_id.eq(uid))
         .select(Photo::as_select())
         .load(&mut connection())
         .unwrap();
@@ -147,5 +140,5 @@ pub async fn search_by_text_service(text: String, uid: i32) -> ListPhoto {
         }
     }
 
-    get_photo_by_id(max_similarity.img_id, uid).await.unwrap()
+    get_photo_by_id(max_similarity.img_id).await.unwrap()
 }

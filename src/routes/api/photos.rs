@@ -28,10 +28,9 @@ pub async fn router() -> Router {
     )
 )]
 pub async fn get_photo(
-    curr_user: Extension<User>,
     Path(photo_id): Path<i32>,
 ) -> Result<Json<ListPhoto>, StatusCode> {
-    if let Some(photo) = get_photo_by_id(photo_id, curr_user.id).await {
+    if let Some(photo) = get_photo_by_id(photo_id).await {
         Ok(Json(photo))
     } else {
         Err(StatusCode::FORBIDDEN)
@@ -59,8 +58,8 @@ pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<P
         (status = 200, description = "Get all photos of user", body = Vec<Photo>)
     )
 )]
-pub async fn get_photos(curr_user: Extension<User>) -> Json<Vec<ListPhoto>> {
-    Json(get_photos_by_filters(curr_user.id).await)
+pub async fn get_photos() -> Json<Vec<ListPhoto>> {
+    Json(get_photos_by_filters().await)
 }
 
 #[utoipa::path(
@@ -72,8 +71,8 @@ pub async fn get_photos(curr_user: Extension<User>) -> Json<Vec<ListPhoto>> {
         (status = 201, description = "Delete photo")
     )
 )]
-pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>) -> StatusCode {
-    match delete_photo_by_id(photo_id, curr_user.0).await {
+pub async fn delete_photo(Path(photo_id): Path<i32>) -> StatusCode {
+    match delete_photo_by_id(photo_id).await {
         Ok(()) => StatusCode::OK,
         Err(code) => code,
     }
@@ -91,8 +90,7 @@ pub async fn delete_photo(Path(photo_id): Path<i32>, curr_user: Extension<User>)
     )
 )]
 pub async fn search_by_text(
-    Path(text): Path<String>,
-    Extension(curr_user): Extension<User>,
+    Path(text): Path<String>
 ) -> Json<ListPhoto> {
-    Json(search_by_text_service(text, curr_user.id).await)
+    Json(search_by_text_service(text).await)
 }

@@ -95,6 +95,6 @@ pub async fn get_user(Path(user_id): Path<i32>) -> Result<Json<User>, Error> {
         (status = 200, description = "Current user", body = User)
     )
 )]
-pub async fn get_current_user(curr_user: Extension<User>) -> Json<User> {
-    Json(curr_user.0.clone())
+pub async fn get_current_user(Extension(curr_user): Extension<User>) -> Json<User> {
+    Json(curr_user.clone())
 }
