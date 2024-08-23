@@ -143,3 +143,9 @@ pub struct PhotoFormUtopia {
 pub struct SearchQuery {
     pub text: Option<String>,
 }
+
+#[derive(Deserialize, IntoParams, ToSchema)]
+pub struct PhotosFilters {
+    pub text: Option<String>,
+    pub qty: Option<i32>,
+}

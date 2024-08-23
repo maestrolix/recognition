@@ -10,11 +10,11 @@ use axum::{
 use axum_typed_multipart::TypedMultipart;
 
 use crate::{
-    models::{Album, ListPhoto, SearchQuery},
+    models::{Album, ListPhoto, PhotosFilters},
     routes::PhotoForm,
     services::{
         albums::get_albums_with_filters,
-        photos::{create_photo, get_photos_by_filters, search_by_text_service},
+        photos::{create_photo, get_photos_by_filters},
     },
 };
 
@@ -22,13 +22,8 @@ pub async fn router() -> Router {
     Router::new().route("/", get(gallery_page).post(post_photo))
 }
 
-async fn gallery_page(Query(searh_photo): Query<SearchQuery>) -> impl IntoResponse {
-    let mut photos = vec![];
-    if let Some(text) = searh_photo.text {
-        photos.push(search_by_text_service(text).await);
-    } else {
-        photos = get_photos_by_filters().await;
-    }
+async fn gallery_page(Query(filters): Query<PhotosFilters>) -> impl IntoResponse {
+    let photos = get_photos_by_filters(filters).await;
     let albums = get_albums_with_filters().await;
     let template = GalleryTemplate { photos, albums };
     HtmlTemplate(template)

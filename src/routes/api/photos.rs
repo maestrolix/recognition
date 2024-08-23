@@ -1,13 +1,11 @@
+use axum::extract::Query;
 use axum::{extract::Path, http::StatusCode, routing::get, Extension, Json, Router};
 use axum_typed_multipart::TypedMultipart;
 
-use crate::models::ListPhoto;
-
 use crate::{
-    models::{PhotoForm, User},
+    models::{ListPhoto, PhotoForm, PhotosFilters, User},
     services::photos::{
         create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters,
-        search_by_text_service,
     },
 };
 
@@ -15,7 +13,7 @@ pub async fn router() -> Router {
     Router::new()
         .route("/", get(get_photos).post(post_photo))
         .route("/:photo_id", get(get_photo).delete(delete_photo))
-        .route("/search/:text", get(search_by_text))
+        .route("/search", get(search_by_text))
 }
 
 #[utoipa::path(
@@ -27,9 +25,7 @@ pub async fn router() -> Router {
         (status = 200, description = "Get photo info", body = ListPhoto)
     )
 )]
-pub async fn get_photo(
-    Path(photo_id): Path<i32>,
-) -> Result<Json<ListPhoto>, StatusCode> {
+pub async fn get_photo(Path(photo_id): Path<i32>) -> Result<Json<ListPhoto>, StatusCode> {
     if let Some(photo) = get_photo_by_id(photo_id).await {
         Ok(Json(photo))
     } else {
@@ -54,12 +50,13 @@ pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<P
     get,
     path = "/api/photo",
     tag = "photos",
+    params(PhotosFilters),
     responses(
         (status = 200, description = "Get all photos of user", body = Vec<Photo>)
     )
 )]
-pub async fn get_photos() -> Json<Vec<ListPhoto>> {
-    Json(get_photos_by_filters().await)
+pub async fn get_photos(Query(filters): Query<PhotosFilters>) -> Json<Vec<ListPhoto>> {
+    Json(get_photos_by_filters(filters).await)
 }
 
 #[utoipa::path(
@@ -80,17 +77,13 @@ pub async fn delete_photo(Path(photo_id): Path<i32>) -> StatusCode {
 
 #[utoipa::path(
     get,
-    path = "/api/photo/search/{text}",
+    path = "/api/photo/search",
     tag = "photos",
-    params(
-        ("text", description = "Text to find image")
-    ),
+    params(PhotosFilters),
     responses(
-        (status = 200, description = "Search image by text", body = Photo)
+        (status = 200, description = "Search image by text", body = Vec<ListPhoto>)
     )
 )]
-pub async fn search_by_text(
-    Path(text): Path<String>
-) -> Json<ListPhoto> {
-    Json(search_by_text_service(text).await)
+pub async fn search_by_text(Query(filters): Query<PhotosFilters>) -> Json<Vec<ListPhoto>> {
+    Json(get_photos_by_filters(filters).await)
 }

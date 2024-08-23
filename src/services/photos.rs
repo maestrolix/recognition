@@ -3,12 +3,12 @@ use axum::http::StatusCode;
 use core::f32;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use image::ImageReader;
+use pgvector::{Vector, VectorExpressionMethods};
 use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
 use crate::fashion_clip::embed::{EmbedImage, EmbedText};
-use crate::models::{ListPhoto, NewPhoto, Photo};
-use crate::utils::cosine_similarity;
+use crate::models::{ListPhoto, NewPhoto, Photo, PhotosFilters};
 
 const UPLOAD_DIR: &str = "storage";
 
@@ -74,15 +74,6 @@ pub async fn get_photo_by_id(photo_id: i32) -> Option<ListPhoto> {
     }
 }
 
-pub async fn get_photos_by_filters() -> Vec<ListPhoto> {
-    use crate::schema::photos::dsl::*;
-
-    photos
-        .select(ListPhoto::as_select())
-        .load(&mut connection())
-        .unwrap()
-}
-
 pub async fn delete_photo_by_id(photo_id: i32) -> Result<(), StatusCode> {
     use crate::schema::photos::dsl::*;
 
@@ -100,45 +91,35 @@ pub async fn delete_photo_by_id(photo_id: i32) -> Result<(), StatusCode> {
     Ok(())
 }
 
-struct ImgSimilarity {
-    cos_sim: f32,
-    img_id: i32,
-}
+pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
+    use crate::schema::photos;
 
-impl ImgSimilarity {
-    pub fn new(cos_sim: f32, img_id: i32) -> Self {
-        ImgSimilarity { cos_sim, img_id }
-    }
-}
+    let mut query = photos::table
+        .select(ListPhoto::as_select()).into_boxed();
 
-pub async fn search_by_text_service(text: String) -> ListPhoto {
-    use crate::schema::photos::dsl::*;
-
-    let embed_text = EmbedText::new(
-        "models/text/model.onnx",
-        "sentence-transformers/clip-ViT-B-32-multilingual-v1",
-    )
-    .unwrap();
-
-    let embedding_text = match embed_text.encode(&text) {
-        Ok(d) => d.into_iter().flat_map(|i| vec![i]).collect::<Vec<f32>>(),
-        Err(e) => panic!("\n{e}\n"),
-    };
-    let photos_db = photos
-        .select(Photo::as_select())
-        .load(&mut connection())
+    if let Some(text) = filters.text {
+        let embed_text = EmbedText::new(
+            "models/text/model.onnx",
+            "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        )
         .unwrap();
+    
+        let embedding_text = match embed_text.encode(&text) {
+            Ok(d) => d.into_iter().flat_map(|i| vec![i]).collect::<Vec<f32>>(),
+            Err(e) => panic!("\n{e}\n"),
+        };
 
-    let mut max_similarity = ImgSimilarity::new(f32::MIN, 0);
-
-    for photo in photos_db {
-        let cos_sim = cosine_similarity(&photo.embedding.unwrap().to_vec(), &embedding_text, false);
-
-        if cos_sim > max_similarity.cos_sim {
-            max_similarity.cos_sim = cos_sim;
-            max_similarity.img_id = photo.id;
-        }
+        query = query.order(photos::embedding.l2_distance(Vector::from(embedding_text)));
+    } 
+    
+    let mut qty_photos = 5;
+    if let Some(qty) = filters.qty {
+        qty_photos = qty;
     }
+    query = query.limit(qty_photos.into());
 
-    get_photo_by_id(max_similarity.img_id).await.unwrap()
+    
+    query
+        .load(&mut connection())
+        .unwrap()
 }

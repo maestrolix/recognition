@@ -41,7 +41,7 @@ num_cpus = "1.16.0"
 rayon = "1.10.0"
 
 # PgVector
-pgvector = { version = "0.4", features = ["diesel", "postgres"] }
+pgvector = { version = "0.4", features = ["diesel"] }
 postgres = "0.19"
 env_logger = "0.11.5"
 log = "0.4.22"
