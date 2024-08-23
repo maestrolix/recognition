@@ -19,6 +19,7 @@
       <div class="box header">
         <div class="search">
           <form method="get" action="">
+            <input type="hidden" name="qty" value="5" style="display: none;">
             <input type="text" name="text" placeholder="Search in all photos...">
           </form>
         </div>
@@ -100,6 +101,17 @@
                 {% for photo in photos %}
                   <img id="myImg{{photo.id}}" onclick="zoom_img('{{photo.id}}')" class="my_img" src="http://0.0.0.0:3000/{{ photo.path }}" alt="" style="height: 190px;">
                 {% endfor %}
+              </div>
+              <div class="load-more">
+                <form action="" method="get">
+                  <button onclick="load_more()">
+                    <div>
+                      Load more
+                    </div>
+                  </button>
+                  <input id="load_more_qty" type="hidden" name="qty" style="display: none;">
+                  <input id="load_more_text" type="hidden" name="text" style="display: none;">
+                </form>
               </div>
               <!-- The Modal -->
               <div id="myModal">

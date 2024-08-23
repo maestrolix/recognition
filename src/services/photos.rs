@@ -94,8 +94,7 @@ pub async fn delete_photo_by_id(photo_id: i32) -> Result<(), StatusCode> {
 pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
     use crate::schema::photos;
 
-    let mut query = photos::table
-        .select(ListPhoto::as_select()).into_boxed();
+    let mut query = photos::table.select(ListPhoto::as_select()).into_boxed();
 
     if let Some(text) = filters.text {
         let embed_text = EmbedText::new(
@@ -103,23 +102,19 @@ pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
             "sentence-transformers/clip-ViT-B-32-multilingual-v1",
         )
         .unwrap();
-    
+
         let embedding_text = match embed_text.encode(&text) {
             Ok(d) => d.into_iter().flat_map(|i| vec![i]).collect::<Vec<f32>>(),
             Err(e) => panic!("\n{e}\n"),
         };
 
         query = query.order(photos::embedding.l2_distance(Vector::from(embedding_text)));
-    } 
-    
-    let mut qty_photos = 5;
-    if let Some(qty) = filters.qty {
-        qty_photos = qty;
     }
-    query = query.limit(qty_photos.into());
 
-    
-    query
-        .load(&mut connection())
-        .unwrap()
+    if let Some(qty) = filters.qty {
+        query = query.limit(qty.into());
+    }
+    // query = query.limit(qty_photos.into());
+
+    query.load(&mut connection()).unwrap()
 }

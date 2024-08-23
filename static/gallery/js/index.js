@@ -38,3 +38,12 @@ function upload() {
       profilePicture.style.backgroundImage = `url(${fileReaderEvent.target.result})`;
     }
 }
+
+
+function load_more() {
+  let params = (new URL(document.location)).searchParams; 
+  console.log(params.get("text"));
+
+  document.getElementById("load_more_text").value = params.get("text");
+  document.getElementById("load_more_qty").value = Number(params.get("qty")) + 5;
+}

@@ -265,3 +265,42 @@
 .create_image input {
   color: #000;
 }
+
+
+
+
+/* 
+.load_more button {
+  background-color: #202020;
+  color: #C1C1C1;
+  width: 1000px;
+}
+ */
+
+
+.load-more {
+  vertical-align: auto;
+  border-radius: 10px;
+}
+
+.load-more button {
+  height: 40px;
+  width: 120px;
+  color: #C1C1C1;
+  font-size: 16px;
+  background-color: #202020;
+  margin: auto;
+  border-radius: 10px;
+  border: #9E9E9E 1px solid;
+  text-decoration: none;
+}
+
+.load-more button:hover {
+  text-decoration: none;
+}
+
+.load-more button:hover {
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}

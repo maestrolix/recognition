@@ -4,9 +4,7 @@ use axum_typed_multipart::TypedMultipart;
 
 use crate::{
     models::{ListPhoto, PhotoForm, PhotosFilters, User},
-    services::photos::{
-        create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters,
-    },
+    services::photos::{create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters},
 };
 
 pub async fn router() -> Router {
