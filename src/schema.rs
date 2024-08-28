@@ -2,7 +2,7 @@
 
 diesel::table! {
     use diesel::sql_types::*;
-    use pgvector::sql_types::Vector;
+    use pgvector::sql_types::*;
 
     albums (id) {
         id -> Int4,
@@ -13,7 +13,31 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use pgvector::sql_types::Vector;
+    use pgvector::sql_types::*;
+
+    faces (person_id, photo_id) {
+        person_id -> Int4,
+        photo_id -> Int4,
+        embedding -> Nullable<Vector>,
+        bbox -> Nullable<Array<Nullable<Int4>>>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use pgvector::sql_types::*;
+
+    persons (id) {
+        id -> Int4,
+        #[max_length = 50]
+        title -> Varchar,
+        avatar -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use pgvector::sql_types::*;
 
     photos (id) {
         id -> Int4,
@@ -28,7 +52,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use pgvector::sql_types::Vector;
+    use pgvector::sql_types::*;
 
     users (id) {
         id -> Int4,
@@ -43,7 +67,15 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(faces -> persons (person_id));
+diesel::joinable!(faces -> photos (photo_id));
 diesel::joinable!(photos -> albums (album_id));
 diesel::joinable!(photos -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(albums, photos, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    albums,
+    faces,
+    persons,
+    photos,
+    users,
+);
