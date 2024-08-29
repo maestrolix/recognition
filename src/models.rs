@@ -149,3 +149,43 @@ pub struct PhotosFilters {
     pub text: Option<String>,
     pub qty: Option<i32>,
 }
+
+#[derive(Queryable, Selectable, ToSchema, Clone, Debug)]
+#[diesel(table_name = crate::schema::persons)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Person {
+    /// Id личности
+    pub id: i32,
+    /// Наименование личности
+    pub title: String,
+    /// Путь к аватару личности
+    pub avatar: String,
+}
+
+#[derive(Insertable, ToSchema, Clone, Debug, Default)]
+#[diesel(table_name = crate::schema::persons)]
+pub struct NewPerson {
+    /// Наименование личности
+    pub title: String,
+    /// Путь к аватару личности
+    pub avatar: String,
+}
+
+#[derive(Queryable, Selectable, ToSchema, Clone, Debug)]
+#[diesel(table_name = crate::schema::faces)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Face {
+    pub person_id: i32,
+    pub photo_id: i32,
+    pub embedding: Option<Vector>,
+    pub bbox: Option<Vec<Option<i32>>>,
+}
+
+#[derive(Insertable, ToSchema, Clone, Debug, Default)]
+#[diesel(table_name = crate::schema::faces)]
+pub struct NewFace {
+    pub person_id: i32,
+    pub photo_id: i32,
+    pub embedding: Option<Vector>,
+    pub bbox: Option<Vec<Option<i32>>>,
+}

@@ -33,7 +33,7 @@ async fn gallery_page(Query(filters): Query<PhotosFilters>) -> impl IntoResponse
 pub async fn post_photo(
     TypedMultipart(photo_form): TypedMultipart<PhotoForm>,
 ) -> impl IntoResponse {
-    create_photo(photo_form, 2).await;
+    create_photo(photo_form, 1).await;
     Redirect::to("/page/gallery")
 }
 

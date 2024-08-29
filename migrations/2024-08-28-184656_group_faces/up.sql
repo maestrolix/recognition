@@ -12,7 +12,7 @@ CREATE TABLE faces (
     embedding VECTOR(512),
     bbox INT[4],
     CONSTRAINT fk_faces_persons
-      FOREIGN KEY(person_id) 
+      FOREIGN KEY(person_id)
         REFERENCES persons(id),
     CONSTRAINT fk_faces_photos
       FOREIGN KEY(photo_id)
