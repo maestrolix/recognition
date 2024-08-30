@@ -5,7 +5,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::Router;
 use pages::template_router;
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -50,4 +50,5 @@ pub async fn craete_app() -> Router {
         .nest_service("/storage", ServeDir::new("storage"))
         .layer(CookieManagerLayer::new())
         .layer(DefaultBodyLimit::max(100000000))
+        .layer(CorsLayer::permissive())
 }
