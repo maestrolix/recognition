@@ -30,6 +30,7 @@ pub async fn craete_app() -> Router {
             albums::get_album,
             albums::delete_album,
             albums::post_album,
+            albums::get_albums,
             security::sign_in
         ),
         components(
