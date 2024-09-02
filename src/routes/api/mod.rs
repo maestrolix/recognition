@@ -17,15 +17,11 @@ pub async fn api_router() -> Router {
         )
         .nest(
             "/album",
-            albums::router()
-                .await
-                .layer(middleware::from_fn(authorize::authorize)),
+            albums::router().await, // .layer(middleware::from_fn(authorize::authorize)),
         )
         .nest(
             "/photo",
-            photos::router()
-                .await
-                .layer(middleware::from_fn(authorize::authorize)),
+            photos::router().await, // .layer(middleware::from_fn(authorize::authorize)),
         )
         .route("/signin", post(security::sign_in))
 }
