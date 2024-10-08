@@ -33,7 +33,7 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .unwrap();
 
     // TODO: Вынести логику работы с вектором и организовать на уровне State app
-    let embed_image = EmbedImage::new("models/CLIP/image/model.onnx").unwrap();
+    let embed_image = EmbedImage::new("models/clip/image/model.onnx").unwrap();
     let embedding_img = match embed_image.encode(dyn_img.clone()) {
         Ok(d) => d,
         Err(e) => panic!("\n{e}\n"),
@@ -94,7 +94,7 @@ async fn faces_logic(photo_id: i32) {
 
     let ultra_output = &ultra_predictor.run(&ultra_image.image).unwrap();
 
-    let embed_image = EmbedImage::new("models/CLIP/image/model.onnx").unwrap();
+    let embed_image = EmbedImage::new("models/clip/image/model.onnx").unwrap();
 
     ultra_image
         .draw_bboxes(
@@ -188,7 +188,7 @@ async fn _faces_logic(img: DynamicImage, embedding: Vec<f32>) {
 
     let ultra_output = &ultra_predictor.run(&ultra_image.image).unwrap();
 
-    let embed_image = EmbedImage::new("models/CLIP/image/model.onnx").unwrap();
+    let embed_image = EmbedImage::new("models/clip/image/model.onnx").unwrap();
 
     ultra_image
         .draw_bboxes(
@@ -289,7 +289,7 @@ pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
 
     if let Some(text) = filters.text {
         let embed_text = EmbedText::new(
-            "models/CLIP/text/model.onnx",
+            "models/clip/text/model.onnx",
             "sentence-transformers/clip-ViT-B-32-multilingual-v1",
         )
         .unwrap();
