@@ -1,8 +1,8 @@
 use axum::http::StatusCode;
-use image::imageops::FilterType;
 use core::f32;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
+use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, RgbImage};
 use pgvector::{Vector, VectorExpressionMethods};
@@ -11,12 +11,14 @@ use std::process;
 use std::{fs, io::Cursor};
 
 use crate::db_connection::connection;
-use crate::fashion_clip::embed::{EmbedImage, EmbedText};
 use crate::models::{Face, ListPhoto, NewFace, NewPerson, NewPhoto, Person, Photo, PhotosFilters};
+use crate::photo_processing::clip::embed::{EmbedImage, EmbedText};
+use crate::photo_processing::ultraface::post_processor::Bbox;
+use crate::photo_processing::ultraface::ultra_image::{draw_bboxes_on_image, UltraImage};
+use crate::photo_processing::ultraface::ultra_predictor::{
+    UltraPredictor, ULTRA_INPUT_HEIGHT, ULTRA_INPUT_WIDTH,
+};
 use crate::schema::users::avatar;
-use crate::ultraface::post_processor::Bbox;
-use crate::ultraface::ultra_image::{draw_bboxes_on_image, UltraImage};
-use crate::ultraface::ultra_predictor::{UltraPredictor, ULTRA_INPUT_HEIGHT, ULTRA_INPUT_WIDTH};
 use crate::utils::cosine_similarity;
 
 const UPLOAD_DIR: &str = "storage/photos";
@@ -187,7 +189,7 @@ async fn _faces_logic(img: DynamicImage, embedding: Vec<f32>) {
     let ultra_output = &ultra_predictor.run(&ultra_image.image).unwrap();
 
     let embed_image = EmbedImage::new("models/CLIP/image/model.onnx").unwrap();
-    
+
     ultra_image
         .draw_bboxes(
             ultra_output.bbox_with_confidences.clone(),
@@ -206,7 +208,6 @@ async fn _faces_logic(img: DynamicImage, embedding: Vec<f32>) {
 
     let mut i = 1;
     for (bbox, _score) in ultra_output.bbox_with_confidences.clone() {
-        
         let face = cut_image(&image.clone(), &bbox);
 
         let embedding_face = match embed_image.encode(face.clone()) {
@@ -219,9 +220,14 @@ async fn _faces_logic(img: DynamicImage, embedding: Vec<f32>) {
 }
 
 pub fn cut_image(image: &RgbImage, bbox: &Bbox) -> DynamicImage {
-    
-    let (x_tl, y_tl) = (bbox[0] * ULTRA_INPUT_WIDTH as f32, bbox[1] * ULTRA_INPUT_HEIGHT as f32);
-    let (x_br, y_br) = (bbox[2] * ULTRA_INPUT_WIDTH as f32, bbox[3] * ULTRA_INPUT_HEIGHT as f32);
+    let (x_tl, y_tl) = (
+        bbox[0] * ULTRA_INPUT_WIDTH as f32,
+        bbox[1] * ULTRA_INPUT_HEIGHT as f32,
+    );
+    let (x_br, y_br) = (
+        bbox[2] * ULTRA_INPUT_WIDTH as f32,
+        bbox[3] * ULTRA_INPUT_HEIGHT as f32,
+    );
     let rect_width = x_br - x_tl;
     let rect_height = y_br - y_tl;
 

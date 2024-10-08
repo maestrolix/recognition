@@ -50,7 +50,7 @@ pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<P
     tag = "photos",
     params(PhotosFilters),
     responses(
-        (status = 200, description = "Get all photos of user", body = Vec<Photo>)
+        (status = 200, description = "Get all photos of user", body = Vec<ListPhoto>)
     )
 )]
 pub async fn get_photos(Query(filters): Query<PhotosFilters>) -> Json<Vec<ListPhoto>> {

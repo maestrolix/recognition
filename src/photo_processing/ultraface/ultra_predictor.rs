@@ -7,7 +7,7 @@ use ort::{
     SessionBuilder, Value,
 };
 
-use crate::ultraface::post_processor::UltraOutput;
+use crate::photo_processing::ultraface::post_processor::UltraOutput;
 
 pub struct UltraPredictor {
     pub name: String,

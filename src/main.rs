@@ -2,13 +2,12 @@ use routes::craete_app;
 
 pub mod db_connection;
 pub mod errors;
-pub mod fashion_clip;
 pub mod middleware;
 pub mod models;
+pub mod photo_processing;
 pub mod routes;
 pub mod schema;
 pub mod services;
-pub mod ultraface;
 pub mod utils;
 
 #[tokio::main]

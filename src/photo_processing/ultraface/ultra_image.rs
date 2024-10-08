@@ -7,7 +7,7 @@ use std::{
 use image::{imageops::FilterType, DynamicImage, ImageError, ImageFormat, Rgb, RgbImage};
 use imageproc::{drawing::draw_hollow_rect, rect::Rect};
 
-use crate::ultraface::{
+use crate::photo_processing::ultraface::{
     post_processor::UltraResult,
     ultra_predictor::{ULTRA_INPUT_HEIGHT, ULTRA_INPUT_WIDTH},
 };
@@ -47,12 +47,17 @@ impl UltraImage<'_> {
     }
 
     pub fn cut_image(self, bbox: &Bbox) -> DynamicImage {
-    
-        let (x_tl, y_tl) = (bbox[0] * ULTRA_INPUT_WIDTH as f32, bbox[1] * ULTRA_INPUT_HEIGHT as f32);
-        let (x_br, y_br) = (bbox[2] * ULTRA_INPUT_WIDTH as f32, bbox[3] * ULTRA_INPUT_HEIGHT as f32);
+        let (x_tl, y_tl) = (
+            bbox[0] * ULTRA_INPUT_WIDTH as f32,
+            bbox[1] * ULTRA_INPUT_HEIGHT as f32,
+        );
+        let (x_br, y_br) = (
+            bbox[2] * ULTRA_INPUT_WIDTH as f32,
+            bbox[3] * ULTRA_INPUT_HEIGHT as f32,
+        );
         let rect_width = x_br - x_tl;
         let rect_height = y_br - y_tl;
-    
+
         DynamicImage::from(
             image::imageops::crop_imm(
                 &self.image,

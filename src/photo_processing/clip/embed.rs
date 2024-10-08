@@ -5,7 +5,7 @@ use ort::{Environment, ExecutionProvider, GraphOptimizationLevel, Session, Sessi
 use std::error::Error;
 use tokenizers::{Encoding, Tokenizer};
 
-use crate::fashion_clip::clip_image_processor::CLIPImageProcessor;
+use crate::photo_processing::clip::clip_image_processor::CLIPImageProcessor;
 
 pub struct EmbedText {
     session: Session,
