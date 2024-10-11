@@ -68,7 +68,19 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .execute(&mut connection())
         .unwrap();
 
-    ultraface_logic(photo.id).await;
+    // ultraface_logic(photo.id).await;
+}
+
+async fn facenet_logic(photo_id: i32) {
+    use crate::schema::{faces, persons, photos};
+
+    let photo: Photo = photos::table
+        .select(Photo::as_select())
+        .find(photo_id)
+        .get_result(&mut connection())
+        .unwrap();
+
+    let img_path = Path::new(&photo.path);
 }
 
 async fn ultraface_logic(photo_id: i32) {
