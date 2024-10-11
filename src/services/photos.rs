@@ -41,6 +41,7 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
 
     let new_photo = NewPhoto::from_form(&photo_form, embedding_img, uid);
 
+    // TODO: Вынести логику создания подключения из функции выше
     let photo = diesel::insert_into(photos)
         .values(&new_photo)
         .returning(Photo::as_returning())
@@ -59,6 +60,7 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
             .collect::<Vec<&str>>()[1]
     );
 
+    // Если сохраняем в том же формате, может возьмем картинку из `photo_form.photo_image.contents`? И не надо буде енкодить
     dyn_img.save(format!("{UPLOAD_DIR}/{img_name}")).unwrap();
 
     diesel::update(photos.find(photo.id))
@@ -66,10 +68,10 @@ pub async fn create_photo(photo_form: crate::models::PhotoForm, uid: i32) {
         .execute(&mut connection())
         .unwrap();
 
-    faces_logic(photo.id).await;
+    ultraface_logic(photo.id).await;
 }
 
-async fn faces_logic(photo_id: i32) {
+async fn ultraface_logic(photo_id: i32) {
     use crate::schema::{faces, persons, photos};
 
     let photo: Photo = photos::table
@@ -173,50 +175,6 @@ async fn faces_logic(photo_id: i32) {
     }
 
     // println!("{:?}", ultra_output);
-}
-
-async fn _faces_logic(img: DynamicImage, embedding: Vec<f32>) {
-    use crate::schema::{faces, persons, photos};
-    img.save(format!("tmp/test.jpeg")).unwrap();
-    let ultra_model_path = Path::new("models/ultraface/version-RFB-640.onnx");
-
-    let ultra_predictor = UltraPredictor::new(ultra_model_path).unwrap_or_else(|ort_err| {
-        println!("Problem creating ultra onnx session: {}", ort_err);
-        process::exit(1)
-    });
-    let mut ultra_image = UltraImage::new(Path::new("tmp/test.jpeg")).unwrap();
-
-    let ultra_output = &ultra_predictor.run(&ultra_image.image).unwrap();
-
-    let embed_image = EmbedImage::new("models/clip/image/model.onnx").unwrap();
-
-    ultra_image
-        .draw_bboxes(
-            ultra_output.bbox_with_confidences.clone(),
-            Path::new("res/"),
-        )
-        .unwrap();
-
-    let raw_image = image::open("tmp/test.jpeg").unwrap();
-    let image = raw_image
-        .resize_to_fill(
-            ULTRA_INPUT_WIDTH as u32,
-            ULTRA_INPUT_HEIGHT as u32,
-            FilterType::Triangle,
-        )
-        .to_rgb8();
-
-    let mut i = 1;
-    for (bbox, _score) in ultra_output.bbox_with_confidences.clone() {
-        let face = cut_image(&image.clone(), &bbox);
-
-        let embedding_face = match embed_image.encode(face.clone()) {
-            Ok(d) => d,
-            Err(e) => panic!("\n{e}\n"),
-        };
-        face.save(format!("storage/avatars/{i}.jpeg")).unwrap();
-        i += 1;
-    }
 }
 
 pub fn cut_image(image: &RgbImage, bbox: &Bbox) -> DynamicImage {
