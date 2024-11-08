@@ -3,14 +3,12 @@ use crate::routes::api::{albums, photos, security, users};
 use api::api_router;
 use axum::extract::DefaultBodyLimit;
 use axum::Router;
-use pages::template_router;
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 pub mod api;
-pub mod pages;
 
 pub async fn craete_app() -> Router {
     #[derive(OpenApi)]
@@ -22,14 +20,18 @@ pub async fn craete_app() -> Router {
             users::delete_user,
             users::get_user,
             users::get_current_user,
+
             photos::post_photo,
             photos::get_photo,
             photos::get_photos,
             photos::delete_photo,
             photos::search_by_text,
+
             albums::get_album,
             albums::delete_album,
             albums::post_album,
+            albums::get_albums,
+
             security::sign_in
         ),
         components(
@@ -46,8 +48,8 @@ pub async fn craete_app() -> Router {
     Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .nest("/api", api_router().await)
-        .nest("/page", template_router().await)
         .nest_service("/storage", ServeDir::new("storage"))
         .layer(CookieManagerLayer::new())
         .layer(DefaultBodyLimit::max(100000000))
+        .layer(CorsLayer::permissive())
 }

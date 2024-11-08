@@ -1,10 +1,11 @@
 use axum::extract::Query;
-use axum::{extract::Path, http::StatusCode, routing::get, Extension, Json, Router};
+use axum::{extract::Path, http::StatusCode, routing::get, Json, Router};
 use axum_typed_multipart::TypedMultipart;
 
 use crate::{
-    models::{ListPhoto, PhotoForm, PhotosFilters, User},
-    services::photos::{create_photo, delete_photo_by_id, get_photo_by_id, get_photos_by_filters},
+    models::{ListPhoto, PhotoForm, PhotosFilters},
+    services::facial_recognition::create_photo,
+    services::photos::{delete_photo_by_id, get_photo_by_id, get_photos_by_filters},
 };
 
 pub async fn router() -> Router {
@@ -40,8 +41,8 @@ pub async fn get_photo(Path(photo_id): Path<i32>) -> Result<Json<ListPhoto>, Sta
         (status = 201, description = "Add new photo", body = Photo)
     )
 )]
-pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<PhotoForm>) {
-    create_photo(photo_form.0, curr_user.id).await;
+pub async fn post_photo(photo_form: TypedMultipart<PhotoForm>) {
+    create_photo(photo_form.0, 1).await.unwrap();
 }
 
 #[utoipa::path(
@@ -50,7 +51,7 @@ pub async fn post_photo(curr_user: Extension<User>, photo_form: TypedMultipart<P
     tag = "photos",
     params(PhotosFilters),
     responses(
-        (status = 200, description = "Get all photos of user", body = Vec<Photo>)
+        (status = 200, description = "Get all photos of user", body = Vec<ListPhoto>)
     )
 )]
 pub async fn get_photos(Query(filters): Query<PhotosFilters>) -> Json<Vec<ListPhoto>> {

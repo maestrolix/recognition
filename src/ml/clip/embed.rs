@@ -1,10 +1,11 @@
+use image::DynamicImage;
 use itertools::Itertools;
 use ndarray::{Array2, ArrayBase, CowArray, CowRepr, Dim, IxDynImpl};
 use ort::{Environment, ExecutionProvider, GraphOptimizationLevel, Session, SessionBuilder, Value};
 use std::error::Error;
 use tokenizers::{Encoding, Tokenizer};
 
-use crate::fashion_clip::clip_image_processor::CLIPImageProcessor;
+use crate::ml::clip::clip_image_processor::CLIPImageProcessor;
 
 pub struct EmbedText {
     session: Session,
@@ -113,9 +114,9 @@ impl EmbedImage {
 
     pub fn encode(
         &self,
-        images_bytes: Vec<u8>,
+        dyn_image: DynamicImage,
     ) -> Result<Vec<f32>, Box<dyn std::error::Error + Send + Sync>> {
-        let pixels = self.preprocesser.preprocess(images_bytes);
+        let pixels = self.preprocesser.preprocess(dyn_image);
 
         // let placeholder_input_ids = Array::from_elem((1, 1), 0_i64).into_dyn().into(); // Placeholder for input_ids
         // let placeholder_attention_mask = Array::from_elem((1, 1), 0_i64).into_dyn().into(); // Placeholder for attention_mask

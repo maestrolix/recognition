@@ -10,7 +10,7 @@ axum = { version = "0.7.5", features = ["macros", "multipart"] }
 jsonwebtoken = "9.3.0"
 tokio = { version = "1.28.2", features = ["full"] }
 serde_json = "1.0.117"
-serde = {version="1.0.203", features = ["derive"]}
+serde = { version = "1.0.203", features = ["derive"] }
 utoipa = { features = ["axum_extras"], version = "4.2.3" }
 utoipa-swagger-ui = { features = ["axum"], version = "7.1.0" }
 diesel = { version = "2.2.0", features = ["postgres"] }
@@ -23,25 +23,25 @@ axum-extra = { version = "0.9.3", features = ["typed-header"] }
 bcrypt = "0.15.1"
 chrono = { version = "0.4.34", features = ["serde"] }
 tower-cookies = "=0.10.0"
+reqwest = { version = "0.12.9", features = ["blocking", "multipart", "stream"] }
 
 # Для шаблонизатора
-askama = "0.12.1"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower-http = { version = "0.5.2", features = ["full"] }
-image = "0.25.2"
+image = "0.24.7"
 
 # Для работы с CLIP
-ndarray = "0.15.6" # используется более стааря версия для совместимости с ort
+ndarray = "0.15.6"                                                 # используется более стааря версия для совместимости с ort
 toml = "0.8.8"
-tokenizers = {version = "0.19.1", features = ["hf-hub", "http"] } 
-ort = {version = "1.16.3", features = ["load-dynamic"]}
+tokenizers = { version = "0.19.1", features = ["hf-hub", "http"] }
+ort = { version = "1.16.3", features = ["load-dynamic"] }
 itertools = "0.13.0"
 num_cpus = "1.16.0"
 rayon = "1.10.0"
+imageproc = "0.23.0"
 
 # PgVector
 pgvector = { version = "0.4", features = ["diesel"] }
 postgres = "0.19"
 env_logger = "0.11.5"
 log = "0.4.22"
+thiserror = "1.0.66"

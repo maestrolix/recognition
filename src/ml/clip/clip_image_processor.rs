@@ -1,6 +1,4 @@
-use std::io::Cursor;
-
-use image::{imageops::FilterType, ImageBuffer, ImageReader, Rgb};
+use image::{imageops::FilterType, DynamicImage, ImageBuffer, Rgb};
 use ndarray::{Array4, ArrayBase, CowArray, CowRepr, Dim};
 
 #[allow(dead_code)]
@@ -31,7 +29,7 @@ impl CLIPImageProcessor {
             rescale_factor: 1.0 / 255.0, // Default rescale factor
             do_normalize: true,
             image_mean: vec![0.48145466, 0.4578275, 0.40821073], // Default image mean
-            image_std: vec![0.26862954, 0.26130258, 0.27577711], // Default image std
+            image_std: vec![0.26862954, 0.261_302_6, 0.27577711], // Default image std
             do_convert_rgb: true,
         }
     }
@@ -102,23 +100,19 @@ impl CLIPImageProcessor {
 
     pub fn preprocess(
         &self,
-        images_bytes: Vec<u8>,
+        dyn_image: DynamicImage,
     ) -> ArrayBase<CowRepr<'_, f32>, Dim<[usize; 4]>> {
-        let images_batch = vec![images_bytes];
+        let dyn_images = vec![dyn_image];
         let mut pixels: ArrayBase<CowRepr<'_, f32>, Dim<[usize; 4]>> =
             CowArray::from(Array4::<f32>::zeros(Dim([
-                images_batch.len(),
+                dyn_images.len(),
                 3,
                 self.size.unwrap().0,
                 self.size.unwrap().1,
             ])));
 
-        for (index, image_bytes) in images_batch.iter().enumerate() {
-            let image = ImageReader::new(Cursor::new(image_bytes))
-                .with_guessed_format()
-                .unwrap()
-                .decode()
-                .unwrap();
+        for (index, image_bytes) in dyn_images.iter().enumerate() {
+            let image = image_bytes;
 
             // Step 1: Convert to RGB
             let mut processed_image = image.clone().into_rgb8();

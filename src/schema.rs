@@ -15,10 +15,12 @@ diesel::table! {
     use diesel::sql_types::*;
     use pgvector::sql_types::*;
 
-    faces (person_id, photo_id) {
-        person_id -> Int4,
+    faces (id) {
+        id -> Int4,
+        person_id -> Nullable<Int4>,
         photo_id -> Int4,
         embedding -> Nullable<Vector>,
+        path -> Nullable<Text>,
         bbox -> Nullable<Array<Nullable<Int4>>>,
     }
 }
@@ -41,12 +43,12 @@ diesel::table! {
 
     photos (id) {
         id -> Int4,
-        path -> Text,
+        path -> Nullable<Text>,
         #[max_length = 50]
         title -> Nullable<Varchar>,
+        embedding -> Nullable<Vector>,
         user_id -> Int4,
         album_id -> Nullable<Int4>,
-        embedding -> Nullable<Vector>,
     }
 }
 

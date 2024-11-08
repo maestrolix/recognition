@@ -41,7 +41,7 @@ pub struct Photo {
     /// Id изображения
     pub id: i32,
     /// Путь к файлу изображения
-    pub path: String,
+    pub path: Option<String>,
     /// Наименование изображения
     pub title: Option<String>,
     /// Id пользователя, загрузившего изображение
@@ -58,7 +58,7 @@ pub struct ListPhoto {
     /// Id изображения
     pub id: i32,
     /// Путь к файлу изображения
-    pub path: String,
+    pub path: Option<String>,
     /// Наименование изображения
     pub title: Option<String>,
     /// Id пользователя, загрузившего изображение
@@ -70,25 +70,20 @@ pub struct ListPhoto {
 #[derive(Insertable, ToSchema, Clone, Debug, Default)]
 #[diesel(table_name = crate::schema::photos)]
 pub struct NewPhoto {
-    /// Путь к файлу изображения
-    pub path: String,
     /// Наименование изображения
     pub title: Option<String>,
     /// Id пользователя, загрузившего изображение
     pub user_id: i32,
     /// Id альбома
     pub album_id: Option<i32>,
-    pub embedding: Option<Vector>,
 }
 
 impl NewPhoto {
-    pub fn from_form(photo: &PhotoForm, embedding: Vec<f32>, uid: i32) -> Self {
+    pub fn from_form(photo: &PhotoForm, uid: i32) -> Self {
         NewPhoto {
-            path: "".to_string(),
             title: Some(photo.title.clone()),
             user_id: uid,
             album_id: Some(photo.album_id),
-            embedding: Some(Vector::from(embedding)),
         }
     }
 }
@@ -148,4 +143,43 @@ pub struct SearchQuery {
 pub struct PhotosFilters {
     pub text: Option<String>,
     pub qty: Option<i32>,
+}
+
+#[derive(Queryable, Selectable, ToSchema, Clone, Debug)]
+#[diesel(table_name = crate::schema::persons)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Person {
+    /// Id личности
+    pub id: i32,
+    /// Наименование личности
+    pub title: String,
+    /// Путь к аватару личности
+    pub avatar: String,
+}
+
+#[derive(Insertable, ToSchema, Clone, Debug, Default)]
+#[diesel(table_name = crate::schema::persons)]
+pub struct NewPerson {
+    /// Наименование личности
+    pub title: String,
+    /// Путь к аватару личности
+    pub avatar: String,
+}
+
+#[derive(Queryable, Selectable, ToSchema, Clone, Debug)]
+#[diesel(table_name = crate::schema::faces)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Face {
+    pub id: i32,
+    pub person_id: Option<i32>,
+    pub photo_id: i32,
+    pub embedding: Option<Vector>,
+    pub bbox: Option<Vec<Option<i32>>>,
+    pub path: Option<String>,
+}
+
+#[derive(Insertable, ToSchema, Clone, Debug, Default)]
+#[diesel(table_name = crate::schema::faces)]
+pub struct NewFace {
+    pub photo_id: i32,
 }

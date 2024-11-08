@@ -2,8 +2,8 @@ use routes::craete_app;
 
 pub mod db_connection;
 pub mod errors;
-pub mod fashion_clip;
 pub mod middleware;
+pub mod ml;
 pub mod models;
 pub mod routes;
 pub mod schema;
