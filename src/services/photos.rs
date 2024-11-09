@@ -4,8 +4,8 @@ use pgvector::{Vector, VectorExpressionMethods};
 use tokio::fs;
 
 use crate::db_connection::connection;
-use crate::ml::clip::get_clip_text_tensor;
 use crate::models::{ListPhoto, Photo, PhotosFilters};
+use crate::services::facial_recognition::clip_textual_from_ml;
 
 pub async fn get_photo_by_id(photo_id: i32) -> Option<ListPhoto> {
     use crate::schema::photos::dsl::*;
@@ -45,7 +45,7 @@ pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
     let mut query = photos::table.select(ListPhoto::as_select()).into_boxed();
 
     if let Some(text) = filters.text {
-        let pg_vector_embedding = Vector::from(get_clip_text_tensor(text));
+        let pg_vector_embedding = Vector::from(clip_textual_from_ml(text).await);
         query = query.order(photos::embedding.cosine_distance(pg_vector_embedding));
     }
 

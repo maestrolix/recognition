@@ -9,14 +9,13 @@ use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 
 use crate::db_connection::connection;
-use crate::ml::clip::get_clip_image_tensor;
 use crate::models::{Face, NewFace, NewPerson, NewPhoto, Photo, PhotoForm};
 
 use std::io::Cursor;
 use thiserror::Error;
 use tokio::io;
 
-const UPLOAD_DIR_IMAGES: &str = "storage/photos";
+const UPLOAD_DIR_IMAGES: &str = "storage/images";
 const UPLOAD_DIR_FACES: &str = "storage/faces";
 
 #[derive(Error, Debug)]
@@ -50,18 +49,18 @@ pub async fn create_photo(photo_form: PhotoForm, uid: i32) -> Result<(), FaceErr
 
     let file_content = photo_form.photo_image.contents.clone();
 
-    let file_name = format!("{}.jpeg", photo.id);
+    let file_path = format!("{UPLOAD_DIR_IMAGES}/{}.jpeg", photo.id);
 
     let dyn_img = ImageReader::new(Cursor::new(file_content))
         .with_guessed_format()?
         .decode()?;
 
-    dyn_img.save(format!("{UPLOAD_DIR_IMAGES}/{file_name}"))?;
+    dyn_img.save(&file_path)?;
 
     photo = diesel::update(photos::table.find(photo.id))
         .set((
-            photos::path.eq(format!("{UPLOAD_DIR_IMAGES}/{file_name}")),
-            photos::embedding.eq(Vector::from(get_clip_image_tensor(dyn_img))),
+            photos::path.eq(&file_path),
+            photos::embedding.eq(Vector::from(clip_visual_from_ml(&file_path).await)),
         ))
         .returning(Photo::as_returning())
         .get_result(&mut connection())?;
@@ -74,9 +73,9 @@ pub async fn cut_faces_and_save(photo: Photo) -> Result<(), FaceError> {
     use crate::schema::{faces, persons};
 
     let raw_image = image::open(photo.path.as_ref().unwrap())?.to_rgb8();
-    let faces = get_faces_from_immich(&photo.path.unwrap()).await;
+    let faces = faces_recognition_from_ml(&photo.path.unwrap()).await;
 
-    for face in faces.facial_recognition {
+    for face in faces {
         let db_face: Face = diesel::insert_into(faces::table)
             .values(&NewFace { photo_id: photo.id })
             .returning(Face::as_returning())
@@ -165,48 +164,50 @@ impl BoundingBox {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct ImmichFace {
+struct DetectedFace {
     #[serde(rename = "boundingBox")]
     bounding_box: BoundingBox,
     embedding: Vec<f32>,
     score: f32,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct ImmichResponse {
-    #[serde(rename = "facial-recognition")]
-    pub facial_recognition: Vec<ImmichFace>,
-    #[serde(rename = "imageHeight")]
-    pub image_height: i32,
-    #[serde(rename = "imageWidth")]
-    pub image_width: i32,
-}
+async fn faces_recognition_from_ml(path: &str) -> Vec<DetectedFace> {
+    let form_data = multipart::Form::new().file("image", path).await.unwrap();
 
-async fn get_faces_from_immich(path: &str) -> ImmichResponse {
-    let entries_arcface = r#"
-        {
-          "facial-recognition": {
-            "detection": {
-              "modelName": "antelopev2",
-              "options": {}
-            },
-            "recognition": {
-              "modelName": "antelopev2",
-              "options": {}
-            }
-          }
-        }
-    "#
-    .to_string();
-
-    let form_data = multipart::Form::new()
-        .text("entries", entries_arcface)
-        .file("image", path)
+    let response_body = reqwest::Client::new()
+        .post("http://0.0.0.0:5005/recognition-faces")
+        .multipart(form_data)
+        .send()
+        .await
+        .expect("send")
+        .text()
         .await
         .unwrap();
 
+    serde_json::from_str(&response_body).unwrap()
+}
+
+pub async fn clip_textual_from_ml(text: String) -> Vec<f32> {
+    let form_data = multipart::Form::new().text("text", text);
+
     let response_body = reqwest::Client::new()
-        .post("http://0.0.0.0:3003/predict")
+        .post("http://0.0.0.0:5005/clip-textual")
+        .multipart(form_data)
+        .send()
+        .await
+        .expect("send")
+        .text()
+        .await
+        .unwrap();
+
+    serde_json::from_str(&response_body).unwrap()
+}
+
+pub async fn clip_visual_from_ml(path: &str) -> Vec<f32> {
+    let form_data = multipart::Form::new().file("image", path).await.unwrap();
+
+    let response_body = reqwest::Client::new()
+        .post("http://0.0.0.0:5005/clip-visual")
         .multipart(form_data)
         .send()
         .await
