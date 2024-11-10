@@ -25,11 +25,8 @@ pub async fn router() -> Router {
     )
 )]
 pub async fn get_photo(Path(photo_id): Path<i32>) -> Result<Json<ListPhoto>, StatusCode> {
-    if let Some(photo) = get_photo_by_id(photo_id).await {
-        Ok(Json(photo))
-    } else {
-        Err(StatusCode::FORBIDDEN)
-    }
+    let photo = get_photo_by_id(photo_id).await.unwrap();
+    Ok(Json(photo))
 }
 
 #[utoipa::path(

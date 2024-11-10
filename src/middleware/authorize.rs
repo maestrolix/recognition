@@ -10,7 +10,7 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, 
 use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 
-use crate::{errors::Error, services::users::get_user_by_email};
+use crate::{middleware::errors::Error, services::users::get_user_by_email};
 
 #[derive(Serialize, Deserialize)]
 pub struct Cliams {

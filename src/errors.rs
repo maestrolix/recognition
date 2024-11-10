@@ -1,31 +1,23 @@
-use axum::{
-    body::Body,
-    http::{Response, StatusCode},
-    response::IntoResponse,
-    Json,
-};
-use serde_json::json;
+#[derive(thiserror::Error, Debug)]
+pub enum CreatePhotoError {
+    #[error("ORM request error {0}")]
+    DieselError(#[from] diesel::result::Error),
 
-pub struct Error {
-    pub message: String,
-    pub status_code: StatusCode,
-}
+    #[error("Tokio StdIO error: {0}")]
+    TokioStdIO(#[from] tokio::io::Error),
 
-impl Error {
-    pub fn new(message: &str, status_code: StatusCode) -> Self {
-        Error {
-            message: message.to_string(),
-            status_code,
-        }
-    }
-}
+    #[error("Image error: {0}")]
+    ImageError(#[from] image::ImageError),
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response<Body> {
-        let body = Json(json!({
-            "error": self.message
-        }));
+    #[error("SerdeJson error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
 
-        (self.status_code, body).into_response()
-    }
+    #[error("Reqwest error: {0}")]
+    Reqwest(#[from] reqwest::Error),
+
+    #[error("unknown data store error")]
+    Unknown,
+    // Делал для OPTION
+    // #[error("")]
+    // Infallible(#[from] std::convert::Infallible),
 }

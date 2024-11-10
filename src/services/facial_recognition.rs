@@ -1,40 +1,20 @@
-use diesel::{
-    result, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
-};
-use image::{io::Reader as ImageReader, DynamicImage, ImageError, RgbImage};
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
+use image::{io::Reader as ImageReader, DynamicImage, RgbImage};
 use pgvector::{Vector, VectorExpressionMethods};
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 
 use crate::db_connection::connection;
+use crate::errors::CreatePhotoError;
 use crate::models::{Face, NewFace, NewPerson, NewPhoto, Photo, PhotoForm};
 
 use std::io::Cursor;
-use thiserror::Error;
-use tokio::io;
 
 const UPLOAD_DIR_IMAGES: &str = "storage/images";
 const UPLOAD_DIR_FACES: &str = "storage/faces";
+// const MIN_SCORE_FOR_RECOGNITION: f32 = 0.5;
 
-#[derive(Error, Debug)]
-pub enum FaceError {
-    #[error("ORM request error")]
-    DieselError(#[from] result::Error),
-
-    #[error("StdIO error: {0}")]
-    StdIO(#[from] io::Error),
-
-    #[error("Image error: {0}")]
-    ImageError(#[from] ImageError),
-
-    #[error("unknown data store error")]
-    Unknown,
-    // Делал для OPTION
-    // #[error("")]
-    // Infallible(#[from] std::convert::Infallible),
-}
-
-pub async fn create_photo(photo_form: PhotoForm, uid: i32) -> Result<(), FaceError> {
+pub async fn create_photo(photo_form: PhotoForm, uid: i32) -> Result<(), CreatePhotoError> {
     use crate::schema::photos;
 
     let mut photo: Photo = diesel::insert_into(photos::table)
@@ -55,20 +35,20 @@ pub async fn create_photo(photo_form: PhotoForm, uid: i32) -> Result<(), FaceErr
     photo = diesel::update(photos::table.find(photo.id))
         .set((
             photos::path.eq(&file_path),
-            photos::embedding.eq(Vector::from(clip_visual_from_ml(&file_path).await)),
+            photos::embedding.eq(Vector::from(clip_visual_from_ml(&file_path).await?)),
         ))
         .returning(Photo::as_returning())
         .get_result(&mut connection())?;
 
-    cut_faces_and_save(photo).await.unwrap();
+    cut_faces_and_save(photo).await?;
     Ok(())
 }
 
-pub async fn cut_faces_and_save(photo: Photo) -> Result<(), FaceError> {
+pub async fn cut_faces_and_save(photo: Photo) -> Result<(), CreatePhotoError> {
     use crate::schema::{faces, persons};
 
     let raw_image = image::open(photo.path.as_ref().unwrap())?.to_rgb8();
-    let faces = faces_recognition_from_ml(&photo.path.unwrap()).await;
+    let faces = faces_recognition_from_ml(&photo.path.unwrap()).await?;
 
     for face in faces {
         let db_face: Face = diesel::insert_into(faces::table)
@@ -166,50 +146,44 @@ struct DetectedFace {
     score: f32,
 }
 
-async fn faces_recognition_from_ml(path: &str) -> Vec<DetectedFace> {
-    let form_data = multipart::Form::new().file("image", path).await.unwrap();
+async fn faces_recognition_from_ml(path: &str) -> Result<Vec<DetectedFace>, CreatePhotoError> {
+    let form_data = multipart::Form::new().file("image", path).await?;
 
     let response_body = reqwest::Client::new()
         .post("http://0.0.0.0:5005/recognition-faces")
         .multipart(form_data)
         .send()
-        .await
-        .expect("send")
+        .await?
         .text()
-        .await
-        .unwrap();
+        .await?;
 
-    serde_json::from_str(&response_body).unwrap()
+    Ok(serde_json::from_str(&response_body)?)
 }
 
-pub async fn clip_textual_from_ml(text: String) -> Vec<f32> {
+pub async fn clip_textual_from_ml(text: String) -> Result<Vec<f32>, CreatePhotoError> {
     let form_data = multipart::Form::new().text("text", text);
 
     let response_body = reqwest::Client::new()
         .post("http://0.0.0.0:5005/clip-textual")
         .multipart(form_data)
         .send()
-        .await
-        .expect("send")
+        .await?
         .text()
-        .await
-        .unwrap();
+        .await?;
 
-    serde_json::from_str(&response_body).unwrap()
+    Ok(serde_json::from_str(&response_body)?)
 }
 
-pub async fn clip_visual_from_ml(path: &str) -> Vec<f32> {
-    let form_data = multipart::Form::new().file("image", path).await.unwrap();
+pub async fn clip_visual_from_ml(path: &str) -> Result<Vec<f32>, CreatePhotoError> {
+    let form_data = multipart::Form::new().file("image", path).await?;
 
     let response_body = reqwest::Client::new()
         .post("http://0.0.0.0:5005/clip-visual")
         .multipart(form_data)
         .send()
-        .await
-        .expect("send")
+        .await?
         .text()
-        .await
-        .unwrap();
+        .await?;
 
-    serde_json::from_str(&response_body).unwrap()
+    Ok(serde_json::from_str(&response_body)?)
 }

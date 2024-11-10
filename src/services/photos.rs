@@ -1,23 +1,20 @@
+use anyhow::Result;
 use axum::http::StatusCode;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
 use pgvector::{Vector, VectorExpressionMethods};
 use tokio::fs;
 
 use crate::db_connection::connection;
+use crate::errors::CreatePhotoError;
 use crate::models::{ListPhoto, Photo, PhotosFilters};
 use crate::services::facial_recognition::clip_textual_from_ml;
 
-pub async fn get_photo_by_id(photo_id: i32) -> Option<ListPhoto> {
+pub async fn get_photo_by_id(photo_id: i32) -> Result<ListPhoto> {
     use crate::schema::photos::dsl::*;
-
-    match photos
+    Ok(photos
         .find(photo_id)
         .select(ListPhoto::as_select())
-        .first(&mut connection())
-    {
-        Ok(photo) => Some(photo),
-        _ => None,
-    }
+        .first(&mut connection())?)
 }
 
 pub async fn delete_photo_by_id(photo_id: i32) -> Result<(), StatusCode> {
@@ -45,7 +42,7 @@ pub async fn get_photos_by_filters(filters: PhotosFilters) -> Vec<ListPhoto> {
     let mut query = photos::table.select(ListPhoto::as_select()).into_boxed();
 
     if let Some(text) = filters.text {
-        let pg_vector_embedding = Vector::from(clip_textual_from_ml(text).await);
+        let pg_vector_embedding = Vector::from(clip_textual_from_ml(text).await.unwrap());
         query = query.order(photos::embedding.cosine_distance(pg_vector_embedding));
     }
 

@@ -7,8 +7,8 @@ use axum::{
 };
 
 use crate::{
-    errors::Error,
     middleware::admin_permissions,
+    middleware::errors::Error,
     models::*,
     services::users::{create_user, delete_user_by_id, get_user_by_id, get_users_with_filters},
 };
