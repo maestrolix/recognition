@@ -38,7 +38,7 @@ pub async fn get_photo(Path(photo_id): Path<i32>) -> Result<Json<ListPhoto>, Sta
     tag = "photos",
     request_body(content_type="multipart/form-data", content=PhotoFormUtopia),
     responses(
-        (status = 201, description = "Add new photo", body = Photo)
+        (status = 201, description = "Add new photo")
     )
 )]
 pub async fn post_photo(photo_form: TypedMultipart<PhotoForm>) {

@@ -1,9 +1,7 @@
 use diesel::{
     result, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
 };
-use image::io::Reader as ImageReader;
-use image::{DynamicImage, ImageError, RgbImage};
-use ort::OrtError;
+use image::{io::Reader as ImageReader, DynamicImage, ImageError, RgbImage};
 use pgvector::{Vector, VectorExpressionMethods};
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
@@ -20,17 +18,14 @@ const UPLOAD_DIR_FACES: &str = "storage/faces";
 
 #[derive(Error, Debug)]
 pub enum FaceError {
-    #[error("")]
+    #[error("ORM request error")]
     DieselError(#[from] result::Error),
 
-    #[error("")]
+    #[error("StdIO error: {0}")]
     StdIO(#[from] io::Error),
 
-    #[error("")]
+    #[error("Image error: {0}")]
     ImageError(#[from] ImageError),
-
-    #[error("")]
-    OrtError(#[from] OrtError),
 
     #[error("unknown data store error")]
     Unknown,

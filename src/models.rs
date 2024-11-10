@@ -81,9 +81,9 @@ pub struct NewPhoto {
 impl NewPhoto {
     pub fn from_form(photo: &PhotoForm, uid: i32) -> Self {
         NewPhoto {
-            title: Some(photo.title.clone()),
+            title: photo.title.clone(),
             user_id: uid,
-            album_id: Some(photo.album_id),
+            album_id: photo.album_id,
         }
     }
 }
@@ -121,8 +121,8 @@ pub struct UsersQuery {
 
 #[derive(TryFromMultipart, Debug)]
 pub struct PhotoForm {
-    pub title: String,
-    pub album_id: i32,
+    pub title: Option<String>,
+    pub album_id: Option<i32>,
     #[form_data(limit = "unlimited")]
     pub photo_image: FieldData<Bytes>,
 }
@@ -130,8 +130,8 @@ pub struct PhotoForm {
 #[derive(ToSchema, Debug)]
 pub struct PhotoFormUtopia {
     pub photo_image: Vec<u8>,
-    pub title: String,
-    pub album_id: i32,
+    pub title: Option<String>,
+    pub album_id: Option<i32>,
 }
 
 #[derive(Deserialize, IntoParams, ToSchema)]

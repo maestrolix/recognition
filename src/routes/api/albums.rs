@@ -50,8 +50,7 @@ pub async fn delete_album(Path(album_id): Path<i32>) {
     )
 )]
 pub async fn get_album(Path(album_id): Path<i32>) -> Json<Album> {
-    let album = get_album_by_id(album_id).await;
-    Json(album)
+    Json(get_album_by_id(album_id).await)
 }
 
 #[utoipa::path(

@@ -64,7 +64,7 @@ pub async fn get_users(Query(params): Query<UsersQuery>) -> Json<Vec<User>> {
     tag = "users",
     params(("user_id" = i32, Path, description = "Todo database id")),
     responses(
-        (status = 201, description = "Create user account", body = StatusCode)
+        (status = 201, description = "Create user account")
     )
 )]
 pub async fn delete_user(Path(user_id): Path<i32>) {
