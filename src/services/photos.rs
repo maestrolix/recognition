@@ -5,7 +5,6 @@ use pgvector::{Vector, VectorExpressionMethods};
 use tokio::fs;
 
 use crate::db_connection::connection;
-use crate::errors::CreatePhotoError;
 use crate::models::{ListPhoto, Photo, PhotosFilters};
 use crate::services::facial_recognition::clip_textual_from_ml;
 

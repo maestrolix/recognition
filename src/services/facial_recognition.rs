@@ -12,7 +12,6 @@ use std::io::Cursor;
 
 const UPLOAD_DIR_IMAGES: &str = "storage/images";
 const UPLOAD_DIR_FACES: &str = "storage/faces";
-// const MIN_SCORE_FOR_RECOGNITION: f32 = 0.5;
 
 pub async fn create_photo(photo_form: PhotoForm, uid: i32) -> Result<(), CreatePhotoError> {
     use crate::schema::photos;
@@ -59,7 +58,7 @@ pub async fn cut_faces_and_save(photo: Photo) -> Result<(), CreatePhotoError> {
         let image_face_path = format!("{UPLOAD_DIR_FACES}/{}.jpeg", db_face.id);
         let pg_vector_embedding = Vector::from(face.embedding);
 
-        cut_image(&raw_image, &face.bounding_box).save(&image_face_path)?;
+        cut_image(&raw_image, &face.bbox).save(&image_face_path)?;
 
         let nearest_face: Option<Face> = faces::table
             .select(Face::as_select())
@@ -91,7 +90,7 @@ pub async fn cut_faces_and_save(photo: Photo) -> Result<(), CreatePhotoError> {
         diesel::update(faces::table.find(db_face.id))
             .set((
                 faces::path.eq(format!("{UPLOAD_DIR_FACES}/{}.jpeg", db_face.id)),
-                faces::bbox.eq(Some(face.bounding_box.to_pg_array())),
+                faces::bbox.eq(Some(face.bbox.map(|el| Some(el as i32)).to_vec())),
                 faces::embedding.eq(Some(pg_vector_embedding)),
                 faces::person_id.eq(person_id),
             ))
@@ -101,15 +100,17 @@ pub async fn cut_faces_and_save(photo: Photo) -> Result<(), CreatePhotoError> {
     Ok(())
 }
 
-fn cut_image(image: &RgbImage, bb: &BoundingBox) -> DynamicImage {
-    let rect_width = bb.x_br - bb.x_tl;
-    let rect_height = bb.y_br - bb.y_tl;
+fn cut_image(image: &RgbImage, bb: &[f32; 4]) -> DynamicImage {
+    let (x_tl, y_tl, x_br, y_br) = (bb[0], bb[1], bb[2], bb[3]);
+
+    let rect_width = x_br - x_tl;
+    let rect_height = y_br - y_tl;
 
     DynamicImage::from(
         image::imageops::crop_imm(
             image,
-            bb.x_tl as u32,
-            bb.y_tl as u32,
+            x_tl as u32,
+            y_tl as u32,
             rect_width as u32,
             rect_height as u32,
         )
@@ -117,40 +118,21 @@ fn cut_image(image: &RgbImage, bb: &BoundingBox) -> DynamicImage {
     )
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct BoundingBox {
-    #[serde(rename = "x1")]
-    pub x_tl: f32,
-    #[serde(rename = "y1")]
-    pub y_tl: f32,
-    #[serde(rename = "x2")]
-    pub x_br: f32,
-    #[serde(rename = "y2")]
-    pub y_br: f32,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RecognizedFaceOutput {
+    pub score: f32,
+    pub bbox: [f32; 4],
+    pub landmarks: [(f32, f32); 5],
+    pub embedding: Vec<f32>,
 }
 
-impl BoundingBox {
-    pub fn to_pg_array(self) -> Vec<Option<i32>> {
-        vec![self.x_tl, self.y_tl, self.x_br, self.y_br]
-            .iter()
-            .map(|e| Some(*e as i32))
-            .collect::<Vec<Option<i32>>>()
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct DetectedFace {
-    #[serde(rename = "boundingBox")]
-    bounding_box: BoundingBox,
-    embedding: Vec<f32>,
-    score: f32,
-}
-
-async fn faces_recognition_from_ml(path: &str) -> Result<Vec<DetectedFace>, CreatePhotoError> {
+async fn faces_recognition_from_ml(
+    path: &str,
+) -> Result<Vec<RecognizedFaceOutput>, CreatePhotoError> {
     let form_data = multipart::Form::new().file("image", path).await?;
 
     let response_body = reqwest::Client::new()
-        .post("http://0.0.0.0:5005/recognition-faces")
+        .post("http://0.0.0.0:3003/recognition-faces")
         .multipart(form_data)
         .send()
         .await?
@@ -161,11 +143,9 @@ async fn faces_recognition_from_ml(path: &str) -> Result<Vec<DetectedFace>, Crea
 }
 
 pub async fn clip_textual_from_ml(text: String) -> Result<Vec<f32>, CreatePhotoError> {
-    let form_data = multipart::Form::new().text("text", text);
-
     let response_body = reqwest::Client::new()
-        .post("http://0.0.0.0:5005/clip-textual")
-        .multipart(form_data)
+        .post("http://0.0.0.0:3003/clip-textual")
+        .query(&[("text", &text)])
         .send()
         .await?
         .text()
@@ -178,7 +158,7 @@ pub async fn clip_visual_from_ml(path: &str) -> Result<Vec<f32>, CreatePhotoErro
     let form_data = multipart::Form::new().file("image", path).await?;
 
     let response_body = reqwest::Client::new()
-        .post("http://0.0.0.0:5005/clip-visual")
+        .post("http://0.0.0.0:3003/clip-visual")
         .multipart(form_data)
         .send()
         .await?
